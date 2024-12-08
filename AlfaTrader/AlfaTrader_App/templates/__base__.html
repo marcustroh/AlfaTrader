@@ -1,0 +1,16 @@
+<!doctype html>
+    <html>
+        <head><meta charset="utf-8">
+        <link rel="stylesheet" href="/../static/css/style.css">
+        </head>
+        <body>
+        {% load static %}
+            <header>
+              <div class="container">
+              <div class="logo"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"/> Alfa Trader</div>
+        {% block content %}
+        {% endblock content %}
+
+
+        </body>
+    </html>

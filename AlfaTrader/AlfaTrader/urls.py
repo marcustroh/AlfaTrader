@@ -16,7 +16,38 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from AlfaTrader_App import views as at_views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', at_views.MainView.as_view(), name='main'),
+    path('base/', at_views.BaseView.as_view(), name='base'),
+    path('login/', at_views.UserLoginView.as_view(), name='login'),
+    # path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
+    # path('register/', at_views.register, name='register'),
+    path('register/', at_views.UserRegisterView.as_view(), name='register'),
+    path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
+    path('dashboard/', at_views.DashboardView.as_view(), name='dashboard'),
 ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
