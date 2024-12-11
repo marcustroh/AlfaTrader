@@ -1,9 +1,87 @@
 {% extends '__base__.html' %}
 
+{% load static %}
+
 {% block content %}
 
         <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
     </div>
     </header>
+    <form method="get" action="{% url 'dashboard' %}">
+        <label for="date">Select quotes date (YYYMMDD)</label>
+        <input type="text" id="date" name="date" placeholder="eg. 20241205" required>
+        
+        <label for="exchange">Select stocks exchange:</label>
+        <select id="exchange" name="exchange">
+            <option value="">--Select exchange--</option>
+            <option value="GPW">GPW</option>
+            <option value="NYSE">NYSE</option>
+            <option value="NASDAQ">NASDAQ</option>
+        </select>
+    <button type="submit">Pull quotes</button>
+    </form>
+    <p></p>
+    
+    <label for="search">Search by company name:</label>
+    <input type="text" id="search" onkeyup="searchTable()" placeholder="Search for company names..">
+    
+    <table border = '1'>
+        <thead>
+            {% if rows %}
+                <tr>
+                    {% for key in rows.0.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                        <th>Quantity</th>
+                        <th>Value</th>
+                        <th>Action</th>
+                </tr>
+            {% endif %}
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    {% for value in row.values %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                        <td><input type="number" class="quantity" data-close="{{ row.3 }}" min="1" step="1"></td>
+                    <td><span class="value">0</span></td>
+                    <td><button class="buy" data-id="{{ row.0 }}">Buy</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="pagination">
+        {% if page.has_previous %}
+            <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page=1">&laquo; First</a>
+            <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&{{ page.previous_page_number }}">Previous</a>
+        {% endif %}
+    
+        <span>Page {{ page.number }} out of {{ page.paginator.num_pages }}</span>
+    
+        {% if page.has_next %}
+            <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page={{ page.next_page_number }}">Next</a>
+            <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page={{ page.paginator.num_pages }}">Last one &raquo;</a>
+        {% endif %}
+    </div>
+    
+    <script src="{% static 'js/search.js' %}"></script>
+    
 
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+{% extends '__base__.html' %}
+
+{% block content %}
+
+        <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
+    </div>
+    </header>
+    
+    <table border = '1'>
+        <thead>
+            {% if rows %}
+                    {% for key in rows.0.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+            {% endif %}
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    {% for value in row.values %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ dataframe }} 
+
+{% endblock %}
