@@ -3,8 +3,9 @@
 {% load static %}
 
 {% block content %}
-
+        <p>Hello {{ request.user }}!</p>
         <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
+        
     </div>
     </header>
     <form method="get" action="{% url 'dashboard' %}">
@@ -44,9 +45,9 @@
                     {% for value in row.values %}
                         <td>{{ value }}</td>
                     {% endfor %}
-                        <td><input type="number" class="quantity" data-close="{{ row.3 }}" min="1" step="1"></td>
-                    <td><span class="value">0</span></td>
-                    <td><button class="buy" data-id="{{ row.0 }}">Buy</button></td>
+                        <td><input type="number" class="quantity" data-close="{{ row.CLOSE }}" min="1" step="1"></td>
+                        <td><input type="text" class="value" value="0" readonly></td>
+                        <td><button class="buy-btn" data-id="{{ row.TICKER }}">Buy</button></td>
                 </tr>
             {% endfor %}
         </tbody>

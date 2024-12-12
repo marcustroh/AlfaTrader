@@ -5,7 +5,10 @@ from django.contrib.auth import get_user_model, login, logout
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
-import requests
+from django.http import JsonResponse
+from.models import Transactions
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from bs4 import BeautifulSoup
 import pandas as pd
 from playwright.sync_api import sync_playwright
@@ -187,9 +190,12 @@ class DashboardView(View):
 
             try:
                 df = pd.read_csv(output_file)
-                selected_columns = df.iloc[:, [0,10,2,7, 11]]
+                selected_columns = df.iloc[:, [0,10,2,7,11]]
+
+                selected_columns.iloc[:, 3] = pd.to_numeric(selected_columns.iloc[:, 3], errors='coerce')
                 if exchange_filter:
                     selected_columns = selected_columns[selected_columns['Gielda'] == exchange_filter]
+                selected_columns.rename(columns={'<CLOSE>': 'CLOSE', '<TICKER>': 'TICKER', '<DATE>': 'DATE'}, inplace=True)
                 paginator = Paginator(selected_columns, 20)
                 page = paginator.get_page(page_number)
                 rows = page.object_list.to_dict(orient='records')
@@ -202,6 +208,31 @@ class DashboardView(View):
                 'paginator': paginator,
             })
 
+@method_decorator(login_required, name='dispatch')
+class BuyTransactionView(View):
+    def post(self, request):
+        import json
+        data = json.loads(request.body)
+
+        ticker = data.get('stock_id')
+        quantity = data.get('quantity')
+        value = data.get('value')
+        close = data.get('close')
+
+        transaction = Transactions.objects.create(
+            ticker=ticker,
+            quantity=quantity,
+            value=value,
+            close=close,
+            user=request.user
+        )
+        return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
+
+# @login_required
+# def view_transactions(request):
+#     # Pobieranie wszystkich transakcji dla zalogowanego użytkownika
+#     transactions = Transaction.objects.filter(user=request.user)
+#     return render(request, 'dashboard.html', {'transactions': transactions})
 
 
 

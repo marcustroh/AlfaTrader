@@ -29,6 +29,7 @@ urlpatterns = [
     path('register/', at_views.UserRegisterView.as_view(), name='register'),
     path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
     path('dashboard/', at_views.DashboardView.as_view(), name='dashboard'),
+    path('buy_transaction/', at_views.BuyTransactionView.as_view(), name='buy_transaction'),
 ]
 
 
