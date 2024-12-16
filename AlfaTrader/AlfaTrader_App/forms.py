@@ -18,12 +18,12 @@ class UserLoginForm(forms.Form):
             self.user = user
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    password_confirm = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput, label="Password")
+    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ['username', 'email', 'password', 'password_confirm']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -33,6 +33,13 @@ class RegistrationForm(forms.ModelForm):
         if password != password_confirm:
             raise forms.ValidationError("Passwords are not the same!")
         return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
 
 
 

@@ -1,0 +1,14 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+        <p>Hello {{ request.user }}!</p>
+        <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
+        
+    </div>
+    </header>
+    
+    {{ transactions }}
+
+{% endblock %}

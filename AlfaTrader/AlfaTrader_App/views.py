@@ -6,16 +6,13 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from.models import Transactions
+from.models import Transactions, CashBalance
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from bs4 import BeautifulSoup
 import pandas as pd
-from playwright.sync_api import sync_playwright
-from requests_html import AsyncHTMLSession
-import nest_asyncio
+import json
+import logging
 import os
-from django.conf import settings
 
 
 from .forms import UserLoginForm, RegistrationForm
@@ -46,6 +43,8 @@ class UserLoginView(View):
         if form.is_valid():
             login(request, form.user)
             return render(request, 'dashboard.html', context)
+        else:
+            return render(request, 'login.html', context)
 
 # def register(request):
 #     if request.method =='POST':
@@ -67,8 +66,9 @@ class UserRegisterView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
+        CashBalance.objects.create(user=user)
         login(self.request, user)
-        return redirect('__base__.html')
+        return redirect('/../dashboard/')
 
 class LogoutUserView(View):
     def get(self, request, *args, **kwargs):
@@ -194,7 +194,7 @@ class DashboardView(View):
 
                 selected_columns.iloc[:, 3] = pd.to_numeric(selected_columns.iloc[:, 3], errors='coerce')
                 if exchange_filter:
-                    selected_columns = selected_columns[selected_columns['Gielda'] == exchange_filter]
+                    selected_columns = selected_columns[selected_columns['Exchange'] == exchange_filter]
                 selected_columns.rename(columns={'<CLOSE>': 'CLOSE', '<TICKER>': 'TICKER', '<DATE>': 'DATE'}, inplace=True)
                 paginator = Paginator(selected_columns, 20)
                 page = paginator.get_page(page_number)
@@ -208,31 +208,54 @@ class DashboardView(View):
                 'paginator': paginator,
             })
 
+logger = logging.getLogger(__name__)
+
 @method_decorator(login_required, name='dispatch')
 class BuyTransactionView(View):
     def post(self, request):
-        import json
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+            ticker = data.get('stock_id')
+            quantity = data.get('quantity')
+            value = data.get('value')
+            close = data.get('close')
 
-        ticker = data.get('stock_id')
-        quantity = data.get('quantity')
-        value = data.get('value')
-        close = data.get('close')
+            logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}")
 
-        transaction = Transactions.objects.create(
-            ticker=ticker,
-            quantity=quantity,
-            value=value,
-            close=close,
-            user=request.user
-        )
-        return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
+            if not ticker or not quantity or not value or not close:
+                logger.error("Missing data fields.")
+                return JsonResponse({'status': "error", 'message': 'Missing data fields'}, status=400)
 
-# @login_required
-# def view_transactions(request):
-#     # Pobieranie wszystkich transakcji dla zalogowanego użytkownika
-#     transactions = Transaction.objects.filter(user=request.user)
-#     return render(request, 'dashboard.html', {'transactions': transactions})
+            try:
+                quantity = int(quantity)
+                value = float(value)
+                close = float(close)
+            except ValueError as e:
+                logger.error(f"Invalid value for quantity, value or close: {e}")
+                return JsonResponse({'status': "error", 'message': 'Invalid value for quantity, value or close'}, status=400)
+
+            transaction = Transactions.objects.create(
+                ticker=ticker,
+                quantity=quantity,
+                value=value,
+                close_price=close,
+                user=request.user
+            )
+
+            logger.debug(f"Transaction created successfully: {transaction}")
+
+            return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
+
+        except Exception as e:
+            logger.error(f"Errror in BuyTransactionView: {e}")
+            return JsonResponse({'status': 'error', 'message': 'an error occurred while processing the transaction.'}, status=500)
+
+@method_decorator(login_required, name='dispatch')
+class TransactionsView(View):
+    def get(self, request):
+        # Pobieranie wszystkich transakcji dla zalogowanego użytkownika
+        transactions = Transactions.objects.filter(user=request.user)
+        return render(request, 'transactions.html', {'transactions': transactions})
 
 
 

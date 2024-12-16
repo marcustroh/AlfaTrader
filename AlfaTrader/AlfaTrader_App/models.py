@@ -13,4 +13,37 @@ class Transactions(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} ={self.ticker} - {self.quantity} shares"
+        return f"{self.user.username} - {self.ticker} - {self.quantity} shares."
+
+class CashBalance(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=10000.00)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cash balance: {self.balance}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
