@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 class Transactions(models.Model):
     ticker = models.CharField(max_length=50)
     quantity = models.PositiveIntegerField()
+    transaction_type = models.CharField(max_length=10, choices=(('BUY', 'Buy'), ('SELL', 'Sell')))
     value = models.DecimalField(max_digits=10, decimal_places=2)
     close_price = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -22,6 +23,14 @@ class CashBalance(models.Model):
 
     def __str__(self):
         return f"Cash balance: {self.balance}"
+
+class Fees(models.Model):
+    transaction_id = models.ForeignKey(Transactions, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    fee = models.DecimalField(max_digits=15, decimal_places=2)
+
+    def __str__(self):
+        return f"Fee for transaction {self.transaction_id.id} by user {self.user.username} (Fee: {self.fee})"
 
 
 

@@ -6,13 +6,15 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from.models import Transactions, CashBalance
+from .models import Transactions, CashBalance, Fees
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import pandas as pd
 import json
 import logging
 import os
+from datetime import datetime
+from decimal import Decimal
 
 
 from .forms import UserLoginForm, RegistrationForm
@@ -167,11 +169,15 @@ class LogoutUserView(View):
 
 class DashboardView(View):
     def get(self, request):
+            timestamp = datetime.now().timestamp()
             date = request.GET.get('date')
             exchange_filter = request.GET.get('exchange')
             page_number = request.GET.get('page', 1)
+            cash_balance = None
+            if request.user.is_authenticated:
+                cash_balance = CashBalance.objects.get(user=request.user)
             if not date:
-                return render(request, 'dashboard.html', {'rows': []})
+                return render(request, 'dashboard.html', {'rows': [], 'cash_balance': cash_balance, 'timestamp': timestamp})
 
             input_file = f'AlfaTrader_App/quotes/txt/{date}_d.txt'
             output_file = f'AlfaTrader_App/quotes/csv/{date}_d.csv'
@@ -206,6 +212,7 @@ class DashboardView(View):
                 'rows': rows,
                 'page': page,
                 'paginator': paginator,
+                'cash_balance': cash_balance
             })
 
 logger = logging.getLogger(__name__)
@@ -219,17 +226,19 @@ class BuyTransactionView(View):
             quantity = data.get('quantity')
             value = data.get('value')
             close = data.get('close')
+            fee = data.get('fees')
 
-            logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}")
+            logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}, fee={fee}")
 
-            if not ticker or not quantity or not value or not close:
+            if not ticker or not quantity or not value or not close or fee is None:
                 logger.error("Missing data fields.")
                 return JsonResponse({'status': "error", 'message': 'Missing data fields'}, status=400)
 
             try:
                 quantity = int(quantity)
-                value = float(value)
-                close = float(close)
+                value = Decimal(value)
+                close = Decimal(close)
+                fee = Decimal(fee)
             except ValueError as e:
                 logger.error(f"Invalid value for quantity, value or close: {e}")
                 return JsonResponse({'status': "error", 'message': 'Invalid value for quantity, value or close'}, status=400)
@@ -237,10 +246,26 @@ class BuyTransactionView(View):
             transaction = Transactions.objects.create(
                 ticker=ticker,
                 quantity=quantity,
+                transaction_type='BUY',
                 value=value,
                 close_price=close,
                 user=request.user
             )
+
+            logger.debug(f"Transaction created: {transaction}")
+
+            Fees.objects.create(
+                transaction_id=transaction,
+                user=request.user,
+                fee=fee
+            )
+
+            logger.debug(f"Fee entry created: {fee}")
+
+            cash_balance = CashBalance.objects.get(user=request.user)
+            cash_balance.balance -= value + fee
+            cash_balance.save()
+            logger.debug(f"Cash balance updated: {cash_balance.balance}")
 
             logger.debug(f"Transaction created successfully: {transaction}")
 
@@ -254,8 +279,16 @@ class BuyTransactionView(View):
 class TransactionsView(View):
     def get(self, request):
         # Pobieranie wszystkich transakcji dla zalogowanego użytkownika
+        cash_balance = CashBalance.objects.get(user=request.user)
         transactions = Transactions.objects.filter(user=request.user)
-        return render(request, 'transactions.html', {'transactions': transactions})
+        fees = Fees.objects.filter(user=request.user).select_related('transaction_id')
+        return render(request, 'transactions.html', {'transactions': transactions, 'fees': fees, 'cash_balance': cash_balance})
+
+class TickerDetailsView(View):
+    def get(self, request, ticker):
+        transactions = Transactions.objects.filter(ticker=ticker)
+
+        return render(request, 'ticker_details.html', {'transactions': transactions})
 
 
 

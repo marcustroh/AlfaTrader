@@ -3,12 +3,84 @@
 {% load static %}
 
 {% block content %}
+        <p>{{ cash_balance }}</p>
         <p>Hello {{ request.user }}!</p>
         <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
         
     </div>
     </header>
     
-    {{ transactions }}
+{#    {{ transactions }}#}
+{#    {{ fees }}#}
+    <h2>Transactions</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Ticker</th>
+                <th>Quantity</th>
+                <th>Transaction Type</th>
+                <th>Value</th>
+                <th>Close Price</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.id }}</td>
+                <td>{{ transaction.ticker }}</td>
+                <td>{{ transaction.quantity }}</td>
+                <td>{{ transaction.get_transaction_type_display }}</td>
+                <td>{{ transaction.value }}</td>
+                <td>{{ transaction.close_price }}</td>
+                <td>{{ transaction.date }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">No transactions found.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2>Fees</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Transaction Type</th>
+                    <th>Fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in fees %}
+                    <tr>
+                        <td>{{ fee.transaction_id.id }}</td>
+                        <td>{{ fee.transaction_id.get_transaction_type_display }}</td>
+                        <td>{{ fee.fee }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">No fees found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
