@@ -3,6 +3,18 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
+class Stocks(models.Model):
+    ticker = models.CharField(max_length=10)
+    name = models.CharField(max_length=255)
+    date = models.DateField()
+    close = models.DecimalField(max_digits=10, decimal_places=2)
+    exchange = models.CharField(max_length=10)
+
+    class Meta:
+        unique_together = ('ticker', 'date')
+
+    def __str__(self):
+        return f"{self.date} - {self.ticker} - {self.close}"
 
 class Transactions(models.Model):
     ticker = models.CharField(max_length=50)

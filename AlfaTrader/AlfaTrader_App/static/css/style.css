@@ -9,16 +9,22 @@
     flex-direction:column;
 }
 
-.container{margin:0 auto;max-width:650px;width:100%;padding:0 15px}
+.container{
+    margin: 50px;
+    max-width:1650px;
+    width:100%;
+    padding:0 15px
+}
 
 #app{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
 
-/*header .container{*/
-/*    display:flex;justify-content:space-between;align-items:center;height:65px;max-width:850px*/
-/*}*/
 
 header .container{
-    display:flex;justify-content:left ;align-items:center;height:65px;max-width:1200px
+    display:flex;
+    justify-content:left ;
+    align-items:center;
+    height:65px;
+    max-width:1200px
 }
 
 header .logo{

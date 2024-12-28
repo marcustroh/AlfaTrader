@@ -3,15 +3,24 @@
 {% load static %}
 
 {% block content %}
-        <p>{{ cash_balance }}</p>
-        <p>Hello {{ request.user }}!</p>
-        <button class="btn" id="logout"><a href="/../logout/">Logout </a></button>
-        
-    </div>
-    </header>
+    <header>
+          <div class="container" id="{{ timestamp }}">
+          <div class="logo"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"/> Alfa Trader</div>
+            <p>{{ cash_balance }}</p>
+              <p>Hello {{ request.user }}!</p>
+          </div>
+        </header>
+       <div class="topnav">
+           <div class="left-links">
+                <a href="/../dashboard3">Transaction Dashboard</a>
+                <a href="transactions.html">Transaction History</a>
+                <a href="#">Portfolios</a>
+           </div>
+           <div class="right-links">
+               <a href="/../logout/">Logout</a>
+           </div>
+       </div>
     
-{#    {{ transactions }}#}
-{#    {{ fees }}#}
     <h2>Transactions</h2>
     <table border="1">
         <thead>

@@ -21,16 +21,20 @@ from AlfaTrader_App import views as at_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', at_views.MainView.as_view(), name='main'),
     path('base/', at_views.BaseView.as_view(), name='base'),
+    path('', at_views.StartView.as_view(), name='start'),
+    path('main/', at_views.MainView.as_view(), name='main'),
     path('login/', at_views.UserLoginView.as_view(), name='login'),
     # path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
     # path('register/', at_views.register, name='register'),
     path('register/', at_views.UserRegisterView.as_view(), name='register'),
     path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
     path('dashboard/', at_views.DashboardView.as_view(), name='dashboard'),
+    path('dashboard2/', at_views.DashboardView2.as_view(), name='dashboard2'),
+    path('dashboard3/', at_views.DashboardView3.as_view(), name='dashboard3'),
     path('dashboard/<str:ticker>', at_views.TickerDetailsView.as_view(), name='ticker_detail'),
     path('buy_transaction/', at_views.BuyTransactionView.as_view(), name='buy_transaction'),
+    path('sell_transaction/', at_views.SellTransactionView.as_view(), name='sell_transaction'),
     path('transactions/', at_views.TransactionsView.as_view(), name='transactions'),
 ]
 

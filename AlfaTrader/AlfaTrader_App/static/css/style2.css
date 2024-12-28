@@ -1,0 +1,181 @@
+header .logo img{
+    width:75px
+}
+
+header .logo{
+    margin-right: 850px;
+    display:flex;
+    align-items:center;
+    font-family:Ubuntu,sans-serif;
+    font-weight:500;
+    font-style:italic
+}
+
+header .container{
+    display:flex;
+    justify-content:left ;
+    align-items:center;
+    height:65px;
+    max-width:1200px
+}
+
+.topnav{
+    overflow: hidden;
+    background-color: darkblue;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
+}
+
+.topnav a {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.topnav .left-links {
+    display: flex;
+}
+
+.topnav .right-links {
+    display: flex;
+}
+
+.topnav a:hover {
+    background-color: #bad4e8;
+    color: darkblue;
+}
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.container{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.container-2{
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.container-3{
+    display: flex;
+    justify-content: center;
+}
+
+.row{
+    display:flex;
+    width: 100%;
+}
+
+.col{
+    flex: 1;
+    padding: 10px;
+    text-align: left;
+}
+
+footer{
+    background-color: darkblue;
+    padding: 10px;
+    text-align: center;
+    color: white;
+    margin-top:100px;
+}
+
+.col h6 {
+    margin-top: 0;
+    margin-bottom: 10px;
+
+}
+
+.col a.social-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    margin: 10px 0;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.col a.social-link i {
+    margin-right: 8px;
+    font-size: 8px;
+
+}
+
+.col a.social-link:hover {
+    color: #ffcc00;
+}
+
+.btn.buy{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: #1d46c5;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+    width: 100%;
+}
+
+.btn.sell{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: #b90d0d;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+    width: 100%;
+}
+
+
+.btn.buy:hover{background-color:#fff;border-color: #0040ff;color: #0040ff
+}
+
+.btn.sell:hover{background-color:#fff;border-color: #63031b;color: #ad0404
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
