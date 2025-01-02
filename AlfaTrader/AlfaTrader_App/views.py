@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, login, logout
@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from .models import Transactions, CashBalance, Fees, Stocks
+from .forms import TransactionForm
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import pandas as pd
@@ -19,7 +20,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mpld3
-
+from django.urls import reverse
+from django.contrib import messages
+from django.db import transaction
 
 from .forms import UserLoginForm, RegistrationForm
 from django.contrib.auth.models import User
@@ -204,7 +207,6 @@ class DashboardView2(View):
                 'cash_balance': cash_balance
             })
 
-## Dashboard pobierajacy dane z SQLite
 
 # class DashboardView3(View):
 #     def get(self, request):
@@ -291,24 +293,44 @@ class DashboardView2(View):
 #                 stocks = Stocks.objects.filter(date=last_business_day).order_by('ticker')
 #                 if exchange_filter:
 #                     stocks = stocks.filter(exchange=exchange_filter)
+#                 if not stocks.exists():
+#                     previous_business_day = last_business_day
+#                     while not stocks.exists():
+#                         previous_business_day -= timedelta(days=1)
+#                         while previous_business_day.weekday() in [5, 6]:
+#                             previous_business_day -= timedelta(days=1)
+#
+#                         stocks = Stocks.objects.filter(date=previous_business_day).order_by('ticker')
+#                         if exchange_filter:
+#                             stocks = stocks.filter(exchange=exchange_filter)
+#
+#                     print(f"Using data from previous business day: {previous_business_day.strftime('%Y-%m-%d')}")
+#
 #                 paginator = Paginator(stocks, 20)
 #                 page = paginator.get_page(page_number)
+#
 #             except Exception as error:
 #                 return HttpResponse(f'Error fetching data from the database: {error}', status=500)
 #
+#             if not stocks.exists():
+#                 page = []
+#
 #             return render(request, 'dashboard3.html', {
-#                 'stocks': page.object_list,
+#                 'stocks': page.object_list if isinstance(page, Paginator) else page,
 #                 'page': page,
 #                 'paginator': paginator,
-#                 'cash_balance': cash_balance
+#                 'cash_balance': cash_balance,
+#                 'timestamp': timestamp
 #             })
 
 class DashboardView3(View):
     def get(self, request):
             timestamp = datetime.now().timestamp()
             exchange_filter = request.GET.get('exchange')
+            search_query = request.GET.get('search', '').strip()
             page_number = request.GET.get('page', 1)
             cash_balance = None
+
             if request.user.is_authenticated:
                 cash_balance = CashBalance.objects.get(user=request.user)
 
@@ -371,7 +393,7 @@ class DashboardView3(View):
                             stocks_to_save.append(stock)
                             print(f"Stock added to list: {stock.ticker} for date {stock.date}")
                         else:
-                            print(f"Stcok already exist in database: {stock.ticker} for date {stock.date}")
+                            print(f"Stock already exist in database: {stock.ticker} for date {stock.date}")
 
                     if stocks_to_save:
                         Stocks.objects.bulk_create(stocks_to_save)
@@ -388,6 +410,10 @@ class DashboardView3(View):
                 stocks = Stocks.objects.filter(date=last_business_day).order_by('ticker')
                 if exchange_filter:
                     stocks = stocks.filter(exchange=exchange_filter)
+
+                if search_query:
+                    stocks = stocks.filter(name__icontains=search_query)
+
                 if not stocks.exists():
                     previous_business_day = last_business_day
                     while not stocks.exists():
@@ -414,54 +440,112 @@ class DashboardView3(View):
                 'stocks': page.object_list if isinstance(page, Paginator) else page,
                 'page': page,
                 'paginator': paginator,
-                'cash_balance': cash_balance
+                'cash_balance': cash_balance,
+                'timestamp': timestamp
             })
 
 logger = logging.getLogger(__name__)
+
+# @method_decorator(login_required, name='dispatch')
+# class BuyTransactionView(View):
+#     def post(self, request):
+#         try:
+#             logger.debug(f"Request body: {request.body.decode('utf-8')}")
+#             if not request.body:
+#                 logger.error("Empty request body.")
+#                 return JsonResponse({'status': 'error', 'message': 'Empty request body.'}, status=400)
+#             try:
+#                 data = json.loads(request.body)
+#             except json.JSONDecodeError as e:
+#                 logger.error(f"JSON decode error: {e}")
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+#
+#             ticker = data.get('stock_id')
+#             quantity = data.get('quantity')
+#             value = data.get('value')
+#             close = data.get('close')
+#             fee = data.get('fees')
+#
+#             logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}, fee={fee}")
+#
+#             if not ticker or not quantity or not value or not close or fee is None:
+#                 logger.error("Missing data fields.")
+#                 return JsonResponse({'status': "error", 'message': 'Missing data fields'}, status=400)
+#
+#
+#             try:
+#                 quantity = int(quantity)
+#                 value = Decimal(value)
+#                 close = Decimal(close)
+#                 fee = Decimal(fee)
+#             except ValueError as e:
+#                 logger.error(f"Invalid value for quantity, value or close: {e}")
+#                 return JsonResponse({'status': "error", 'message': 'Invalid value for quantity, value or close'}, status=400)
+#
+#             transaction = Transactions.objects.create(
+#                 ticker=ticker,
+#                 quantity=quantity,
+#                 transaction_type='BUY',
+#                 value=value,
+#                 close_price=close,
+#                 user=request.user
+#             )
+#
+#             logger.debug(f"Transaction created: {transaction}")
+#
+#             Fees.objects.create(
+#                 transaction_id=transaction,
+#                 user=request.user,
+#                 fee=fee
+#             )
+#
+#             logger.debug(f"Fee entry created: {fee}")
+#
+#             cash_balance = CashBalance.objects.get(user=request.user)
+#             cash_balance.balance -= value + fee
+#             cash_balance.save()
+#             logger.debug(f"Cash balance updated: {cash_balance.balance}")
+#
+#             logger.debug(f"Transaction created successfully: {transaction}")
+#
+#             return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
+#
+#         except Exception as e:
+#             logger.error(f"Error in BuyTransactionView: {e}")
+#             return JsonResponse({'status': 'error', 'message': 'an error occurred while processing the transaction.'}, status=500)
 
 @method_decorator(login_required, name='dispatch')
 class BuyTransactionView(View):
     def post(self, request):
         try:
-            logger.debug(f"Request body: {request.body.decode('utf-8')}")
-            if not request.body:
-                logger.error("Empty request body.")
-                return JsonResponse({'status': 'error', 'message': 'Empty request body.'}, status=400)
-            try:
-                data = json.loads(request.body)
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {e}")
-                return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+            close_price = request.POST['close_price_buy']
+            quantity_buy = request.POST['quantity_buy']
+            value = Decimal(request.POST['value_buy'])
+            fee = Decimal(request.POST['fee_buy'])
+            user = request.user
+            ticker = request.POST['ticker']
+        except Exception as error:
+            return HttpResponse(f'Error reading data from the form: {error}', status=500)
 
-            ticker = data.get('stock_id')
-            quantity = data.get('quantity')
-            value = data.get('value')
-            close = data.get('close')
-            fee = data.get('fees')
+        try:
+            cash_balance = CashBalance.objects.get(user=request.user)
 
-            logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}, fee={fee}")
+            total_cost = value + fee
 
-            if not ticker or not quantity or not value or not close or fee is None:
-                logger.error("Missing data fields.")
-                return JsonResponse({'status': "error", 'message': 'Missing data fields'}, status=400)
+            if cash_balance.balance < total_cost:
+                messages.error(request, 'Insufficent funds for this transaction.')
+                redirect_url = reverse('ticker_detail', kwargs={'ticker': ticker})
+                return HttpResponseRedirect(redirect_url)
 
-
-            try:
-                quantity = int(quantity)
-                value = Decimal(value)
-                close = Decimal(close)
-                fee = Decimal(fee)
-            except ValueError as e:
-                logger.error(f"Invalid value for quantity, value or close: {e}")
-                return JsonResponse({'status': "error", 'message': 'Invalid value for quantity, value or close'}, status=400)
+            # with transaction.atomic():
 
             transaction = Transactions.objects.create(
                 ticker=ticker,
-                quantity=quantity,
+                quantity=quantity_buy,
                 transaction_type='BUY',
                 value=value,
-                close_price=close,
-                user=request.user
+                close_price=close_price,
+                user=user
             )
 
             logger.debug(f"Transaction created: {transaction}")
@@ -472,20 +556,19 @@ class BuyTransactionView(View):
                 fee=fee
             )
 
-            logger.debug(f"Fee entry created: {fee}")
-
             cash_balance = CashBalance.objects.get(user=request.user)
             cash_balance.balance -= value + fee
             cash_balance.save()
-            logger.debug(f"Cash balance updated: {cash_balance.balance}")
 
-            logger.debug(f"Transaction created successfully: {transaction}")
+            messages.success(request, 'Transaction created successfully!')
 
-            return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
+        except Exception as error:
+            return HttpResponse(f'Error saving data the database: {error}', status=500)
 
-        except Exception as e:
-            logger.error(f"Error in BuyTransactionView: {e}")
-            return JsonResponse({'status': 'error', 'message': 'an error occurred while processing the transaction.'}, status=500)
+
+        redirect_url = reverse('ticker_detail', kwargs={'ticker': ticker})
+        return HttpResponseRedirect(redirect_url)
+
 
 @method_decorator(login_required, name='dispatch')
 class TransactionsView(View):
@@ -500,7 +583,7 @@ class TickerDetailsView(View):
     def get(self, request, ticker):
         timestamp = datetime.now().timestamp()
         transactions = Transactions.objects.filter(ticker=ticker, user=request.user)
-        buy_transactions = transactions.filter(transaction_type='BUY')
+        buy_transactions = transactions.filter(transaction_type='BUY').order_by('date')
         cash_balance = CashBalance.objects.get(user=request.user)
         today = datetime.today()
 
@@ -533,11 +616,39 @@ class TickerDetailsView(View):
         except Exception as error:
             return HttpResponse(f"Error fetching close price: {error}", status=500)
 
+
+        remaining_shares = 0
+        weighted_sum = 0
         if buy_transactions.exists():
-            total_value = sum(t.quantity * t.close_price for t in buy_transactions)
-            total_quantity = sum(t.quantity for t in buy_transactions)
-            weighted_avg_cost_price = total_value / total_quantity if total_quantity > 0 else 0
-            weighted_avg_cost_price = round(weighted_avg_cost_price, 2)
+            for buy in buy_transactions:
+                remaining_shares += buy.quantity
+                weighted_sum += buy.quantity * buy.close_price
+
+            sell_transactions = transactions.filter(transaction_type='SELL')
+
+            if sell_transactions.exists():
+                for sell in sell_transactions:
+                    sell_quantity = sell.quantity
+                    for buy in buy_transactions:
+                        if sell_quantity <= 0:
+                            break
+                        if buy.quantity > 0:
+                            if buy.quantity <= sell_quantity:
+                                sell_quantity -= buy.quantity
+                                weighted_sum -= buy.quantity * buy.close_price
+                                remaining_shares -= buy.quantity
+                                buy.quantity = 0
+                            else:
+                                buy.quantity -= sell_quantity
+                                weighted_sum -= sell_quantity * buy.close_price
+                                remaining_shares -= sell_quantity
+                                sell_quantity = 0
+
+            if remaining_shares > 0:
+                weighted_avg_cost_price = weighted_sum / remaining_shares
+                weighted_avg_cost_price = round(weighted_avg_cost_price, 2)
+            else:
+                weighted_avg_cost_price = 0
         else:
             weighted_avg_cost_price = 0
 
@@ -575,6 +686,7 @@ class TickerDetailsView(View):
             'weighted_avg_cost_price': weighted_avg_cost_price,
             'graph_html': graph_html,
             'timestamp': timestamp,
+            'remaining_shares': remaining_shares,
 
 
         })
@@ -582,7 +694,62 @@ class TickerDetailsView(View):
 @method_decorator(login_required, name='dispatch')
 class SellTransactionView(View):
     def post(self, request):
-        pass
+        try:
+            quantity_sell = request.POST['quantity_sell']
+            close_price = request.POST['close_price_sell']
+            ticker = request.POST['ticker']
+            value = Decimal(request.POST['value_sell'])
+            user = request.user
+            fee = Decimal(request.POST['fees_sell'])
+            remaining_shares = request.POST['remaining_shares']
+
+        except Exception as error:
+            return HttpResponse(f'Error reading data from the form: {error}', status=500)
+
+        try:
+            transaction = Transactions.objects.create(
+                ticker=ticker,
+                quantity=quantity_sell,
+                transaction_type='SELL',
+                value=value,
+                close_price=close_price,
+                user=user
+            )
+
+            Fees.objects.create(
+                transaction_id=transaction,
+                user=request.user,
+                fee=fee
+            )
+
+            cash_balance = CashBalance.objects.get(user=request.user)
+            cash_balance.balance += value - fee
+            cash_balance.save()
+
+            messages.success(request, 'Transaction created successfully!')
+
+        except Exception as error:
+            return HttpResponse(f'Error saving data the database: {error}', status=500)
+
+        redirect_url = reverse('ticker_detail', kwargs={'ticker': ticker})
+        return HttpResponseRedirect(redirect_url)
+
+class AboutAuthor(View):
+    def get(self, request):
+        return render(request, 'author.html')
+
+class ContactDetails(View):
+    def get(self, request):
+        return render(request, 'contact_details.html')
+
+class AboutApp(View):
+    def get(self, request):
+        return render(request, 'about_app.html')
+
+class HowToBegin(View):
+    def get(self, request):
+        return render(request, 'how_to_begin.html')
+
 
 
 

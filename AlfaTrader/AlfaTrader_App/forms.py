@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from .models import Transactions
 
 class UserLoginForm(forms.Form):
     username = forms.CharField()
@@ -41,6 +42,9 @@ class RegistrationForm(forms.ModelForm):
             user.save()
         return user
 
+class TransactionForm(forms.ModelForm):
+    model = Transactions
+    fields = ['ticker', 'quantity_sell', 'transaction_type', 'value_sell', 'close_price_sell', 'user', 'fees_sell']
 
 
 

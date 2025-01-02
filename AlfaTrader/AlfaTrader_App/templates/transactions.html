@@ -5,7 +5,7 @@
 {% block content %}
     <header>
           <div class="container" id="{{ timestamp }}">
-          <div class="logo"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"/> Alfa Trader</div>
+          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
             <p>{{ cash_balance }}</p>
               <p>Hello {{ request.user }}!</p>
           </div>

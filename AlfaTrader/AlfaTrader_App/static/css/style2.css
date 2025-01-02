@@ -45,8 +45,8 @@ header .container{
 }
 
 .topnav a:hover {
-    background-color: #bad4e8;
-    color: darkblue;
+    background-color: #ffcc00;
+    color: black;
 }
 
 body{
@@ -89,6 +89,16 @@ footer{
     text-align: center;
     color: white;
     margin-top:100px;
+}
+
+footer h6 a {
+  text-decoration: none;   /* Usunięcie podkreślenia */
+  color: white;          /* Kolor tekstu linku (możesz zmienić na inny) */
+  transition: color 0.3s;  /* Dodanie efektu przejścia koloru przy najechaniu */
+}
+
+footer h6 a:hover {
+  color: #ffcc00;         /* Kolor linku po najechaniu */ /* Dodanie podkreślenia przy najechaniu */
 }
 
 .col h6 {
@@ -159,7 +169,62 @@ footer{
 .btn.sell:hover{background-color:#fff;border-color: #63031b;color: #ad0404
 }
 
+.btn.btn-primary{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
 
+.btn:hover{background-color:#ffcc00;border-color: black;color: black
+}
+
+.btn.btn-primary-2{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+.btn:hover{background-color:#ffcc00;border-color: black;color: black
+}
+
+.dashboard {
+            width: 80%; /* Możesz dostosować szerokość tabeli */
+            margin: 0 auto; /* Wyśrodkowanie tabeli */
+            border: 1px solid black; /* Pojedyncze obramowanie */
+            border-collapse: collapse; /* Opcjonalnie, aby obramowanie było bardziej jednolite */
+        }
+
+.exchange{
+    margin-left: 150px
+}
+
+.search{
+    margin-left: 150px
+}
+
+.pagination{
+    margin-left: 150px
+}
 
 
 

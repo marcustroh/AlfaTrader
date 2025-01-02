@@ -36,6 +36,11 @@ urlpatterns = [
     path('buy_transaction/', at_views.BuyTransactionView.as_view(), name='buy_transaction'),
     path('sell_transaction/', at_views.SellTransactionView.as_view(), name='sell_transaction'),
     path('transactions/', at_views.TransactionsView.as_view(), name='transactions'),
+    path('about_author/', at_views.AboutAuthor.as_view(), name='about_author'),
+    path('contact/', at_views.ContactDetails.as_view(), name='contact_details'),
+    path('about_app/', at_views.AboutApp.as_view(), name='about_app'),
+    path('how_to_begin/', at_views.HowToBegin.as_view(), name='how_to_begin'),
+    # path('transaction_results/', at_views.TransactionResultsView.as_view(), name='transaction_results'),
 ]
 
 
