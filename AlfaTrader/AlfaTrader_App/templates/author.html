@@ -1,22 +1,6 @@
 {% extends '__base__.html' %}
 
 {% block content %}
-    {% load static %}
-        <header>
-          <div class="container" id="{{ timestamp }}">
-          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
-          </div>
-        </header>
-       <div class="topnav">
-           <div class="left-links">
-                <a href="#">Transaction Dashboard</a>
-                <a href="#">Transaction History</a>
-                <a href="#">Portfolios</a>
-           </div>
-           <div class="right-links">
-               <a href="/../register/">Sign Up</a>
-               <a href="/../login/">Sign In</a>
-           </div>
            
        </div>
         <div>

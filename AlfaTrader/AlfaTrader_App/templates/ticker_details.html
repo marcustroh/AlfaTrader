@@ -3,27 +3,9 @@
 {% load static %}
 
 {% block content %}
-    <header>
-          <div class="container" id="{{ timestamp }}">
-          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
-            <p>{{ cash_balance }}</p>
-              <p>Hello {{ request.user }}!</p>
-          </div>
-        </header>
-       <div class="topnav">
-           <div class="left-links">
-                <a href="/../dashboard3">Transaction Dashboard</a>
-                <a href="/../transactions">Transaction History</a>
-                <a href="#">Portfolios</a>
-           </div>
-           <div class="right-links">
-               <a href="/../logout/">Logout</a>
-           </div>
-       </div>
         
     <h3>Price Change for {{ ticker }}:</h3>
     <div class="container-2">
-        
         <div>
             {{ graph_html|safe }}
         </div>
@@ -39,6 +21,10 @@
                 <tr>
                     <td>Close Price:</td>
                     <td><input type="text" class="close_price_buy" name="close_price_buy" value="{{ close_price }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Weighted avg cost price</td>
+                    <td><input type="text" class="cost_price" name="cost_price" data-cost-price="{{ weighted_avg_cost_price }}" value="{{ weighted_avg_cost_price }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Quantity:</td>
@@ -76,7 +62,7 @@
                 </tr>
                 <tr>
                     <td>Weighted avg cost price</td>
-                    <td><input type="text" class="cost_price" data-cost-price="{{ weighted_avg_cost_price }}" value="{{ weighted_avg_cost_price }}" readonly></td>
+                    <td><input type="text" class="cost_price" name="cost_price" data-cost-price="{{ weighted_avg_cost_price }}" value="{{ weighted_avg_cost_price }}" readonly></td>
                 </tr>
                 <tr>
                     <td>Shares availible</td>
@@ -120,54 +106,6 @@
             {% endfor %}
         </div>
     {% endif %}
-    
-{#        <div class="row">#}
-{#            <div class="col">#}
-{#                <h3>Buy Shares</h3>#}
-{#                <form method="post" action="{% url 'buy_transaction' %}">#}
-{#                    {% csrf_token %}#}
-{#                    <label for="price">Close price: {{ close_price }}</label>#}
-{#                    <br>#}
-{#                    <label for="quantity_buy">Quantity:</label>#}
-{#                    <input type="number" class="quantity_buy" id="quantity_buy" data-close="{{ close_price }}" min="1" step="1" required>#}
-{#                    <br>#}
-{#                    <label for="value_buy">Value:</label>#}
-{#                    <input type="text" class="value_buy" value="0" readonly>#}
-{#                    <br>#}
-{#                    <label for="fee_buy">Fee:</label>#}
-{#                    <input type="text" class="fee_buy" value="0" readonly>#}
-{#                    <br>#}
-{#                    <label for="total_buy">Total:</label>#}
-{#                    <input type="text" class="total_buy" value="0" readonly>#}
-{#                    #}
-{#                    <button class="btn btn-primary buy" data-id="{{ ticker }}">BUY</button>#}
-{#                </form>#}
-{#            </div>#}
-{#            #}
-{#            <div class="col">#}
-{#                <h3>Sell Shares</h3>#}
-{#                <form method="post" action="{% url 'sell_transaction' %}">#}
-{#                    {% csrf_token %}#}
-{#                    <label for="value">Close price: {{ close_price }}</label>#}
-{#                    <br>#}
-{#                    <label for="value">Weighted avg cost price: {{ weighted_avg_cost_price }}</label>#}
-{#                    <br>#}
-{#                    <label for="quantity_sell">Quantity</label>#}
-{#                    <input type="number" id="quantity_sell" name="quantity_sell" value="{{ total_quantity }}" min="1" step="1" required>#}
-{#                    <br>#}
-{#                    <label for="value_sell">Value:</label>#}
-{#                    <input type="text" class="value" value="0" readonly>#}
-{#                    <br>#}
-{#                    <label for="fee_sell">Fee:</label>#}
-{#                    <input type="text" class="fees" value="0" readonly>#}
-{#                    <br>#}
-{#                    <label for="total_sell">Total:</label>#}
-{#                    <input type="text" class="total" value="0" readonly>#}
-{#                    #}
-{#                    <button type="submit" class="btn">SELL</button>#}
-{#                </form>#}
-{#            </div>#}
-{#        </div>#}
     <h2>Transactions</h2>
     <div class="container-2">
             
@@ -203,13 +141,8 @@
         </table>
     </div>
     </div>
-{#    <script>#}
-{#        // Pobranie tokenu CSRF z meta tagu#}
-{#        var csrftoken = document.querySelector('[name=csrf-token]').getAttribute('content');#}
-{##}
-{#    </script>#}
-    <script src="{% static 'js/transaction_execution.js' %}?v={{ timestamp }}"></script>
-    <script src="{% static 'js/transaction_execution_sell.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'js/buy_calculation.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'js/sell_calculation.js' %}?v={{ timestamp }}"></script>
     
 {% endblock %}
 

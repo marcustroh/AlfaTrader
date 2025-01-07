@@ -2,7 +2,8 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Transactions
+from .models import Portfolio, PortfolioStocks, Transactions, UserStocksBalance, Stocks
+
 
 class UserLoginForm(forms.Form):
     username = forms.CharField()
@@ -42,9 +43,40 @@ class RegistrationForm(forms.ModelForm):
             user.save()
         return user
 
-class TransactionForm(forms.ModelForm):
-    model = Transactions
-    fields = ['ticker', 'quantity_sell', 'transaction_type', 'value_sell', 'close_price_sell', 'user', 'fees_sell']
+class PortfolioForm(forms.Form):
+    portfolio_name = forms.CharField(max_length=255, required=True)
+    stock = forms.ModelMultipleChoiceField(
+        queryset=UserStocksBalance.objects.all(),
+        widget=forms.CheckboxSelectMultiple(),
+        required=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(PortfolioForm, self).__init__(*args, **kwargs)
+
+        if user:
+            self.fields['stock'].queryset = UserStocksBalance.objects.filter(user=user)
+
+class PortfolioModifyForm(forms.ModelForm):
+    class Meta:
+        model = Portfolio
+        fields = ['name']
+
+    stocks = forms.ModelMultipleChoiceField(
+        queryset=UserStocksBalance.objects.all(),
+        widget=forms.CheckboxSelectMultiple(),
+        required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(PortfolioModifyForm, self).__init__(*args, **kwargs)
+
+        if user:
+            self.fields['stocks'].queryset = UserStocksBalance.objects.filter(user=user)
+
+
 
 
 

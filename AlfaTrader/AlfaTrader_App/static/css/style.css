@@ -1,34 +1,9 @@
-
-.row{
-    display:flex;
-    flex-direction:row
-}
-
-.col{
-    display:flex;
-    flex-direction:column;
-}
-
-.container{
-    margin: 50px;
-    max-width:1650px;
-    width:100%;
-    padding:0 15px
-}
-
-#app{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
-
-
-header .container{
-    display:flex;
-    justify-content:left ;
-    align-items:center;
-    height:65px;
-    max-width:1200px
+header .logo img{
+    width:75px
 }
 
 header .logo{
-    margin-right: 850px;
+    /*margin-right: 850px;*/
     display:flex;
     align-items:center;
     font-family:Ubuntu,sans-serif;
@@ -36,13 +11,143 @@ header .logo{
     font-style:italic
 }
 
-header .logo img{width:75px
+header .container{
+    display:flex;
+    justify-content:space-between ;
+    align-items:center;
+    height:65px;
+    /*max-width:1200px*/
 }
 
-.btn{
+.topnav{
+    overflow: hidden;
+    background-color: darkblue;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
+}
+
+.container-portfolio-btn{
+    display:flex;
+    justify-content: left;
+}
+
+.topnav a {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.topnav .left-links {
+    display: flex;
+}
+
+.topnav .right-links {
+    display: flex;
+}
+
+.topnav a:hover {
+    background-color: #ffcc00;
+    color: black;
+}
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.container{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.container .left-links{
+    flex: 1;
+}
+
+.container .right-links{
+    display: flex;
+    gap: 30px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.container-2{
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.container-3{
+    display: flex;
+    justify-content: center;
+}
+
+.row{
+    display:flex;
+    width: 100%;
+}
+
+.col{
+    flex: 1;
+    padding: 10px;
+    text-align: left;
+}
+
+footer{
+    background-color: darkblue;
+    padding: 10px;
+    text-align: center;
+    color: white;
+    margin-top:100px;
+}
+
+footer h6 a {
+  text-decoration: none;   /* Usunięcie podkreślenia */
+  color: white;          /* Kolor tekstu linku (możesz zmienić na inny) */
+  transition: color 0.3s;  /* Dodanie efektu przejścia koloru przy najechaniu */
+}
+
+footer h6 a:hover {
+  color: #ffcc00;         /* Kolor linku po najechaniu */ /* Dodanie podkreślenia przy najechaniu */
+}
+
+.col h6 {
+    margin-top: 0;
+    margin-bottom: 10px;
+
+}
+
+.col a.social-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    margin: 10px 0;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.col a.social-link i {
+    margin-right: 8px;
+    font-size: 8px;
+
+}
+
+.col a.social-link:hover {
+    color: #ffcc00;
+}
+
+.btn.buy{
     margin-right: 20px;
     border-radius:8px;
-    background-color: #0040ff;
+    background-color: #1d46c5;
     border:1px solid transparent;
     color:#fff;
     align-items:center;
@@ -52,17 +157,196 @@ header .logo img{width:75px
     outline:0;
     font-size:.9rem;
     transition:all .3s ease-in-out;
-    box-shadow:0 0 15px 0 rgba(0,0,0,.1)
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+    width: 100%;
 }
 
-.btn:hover{background-color:#fff;border-color: #0040ff;color: #0040ff
+.btn.sell{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: #b90d0d;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+    width: 100%;
 }
 
-.btn:active{outline:0}
 
-.btn i{margin-left:7px
+.btn.buy:hover{background-color:#fff;border-color: #0040ff;color: #0040ff
 }
 
-.btn--icon{font-size:.8rem;padding:1px 3px;display:inline-block;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px}
-.btn--icon i{margin-left:0;font-size:.8rem}
-.btn--close{position:absolute;right:15px;top:15px}
+.btn.sell:hover{background-color:#fff;border-color: #63031b;color: #ad0404
+}
+
+.btn.btn-primary{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+.portfolio-table .modify-btn{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+.portfolio-table .delete-btn{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius:8px;
+    background-color: #b90d0d;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+.portfolio-table .modify-btn:hover{
+    background-color:#fff;
+    border-color: #0040ff;
+    color: #0040ff
+}
+
+.portfolio-table .delete-btn:hover{background-color:#fff;border-color: #63031b;color: #ad0404
+}
+
+form button.delete-btn{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius:8px;
+    background-color: #b90d0d;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+form button.create-btn:hover{
+    background-color:#fff;
+    border-color: #0040ff;
+    color: #0040ff
+}
+
+form button.create-btn{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+form button.delete-btn:hover{background-color:#fff;border-color: #63031b;color: #ad0404
+}
+
+.btn:hover{background-color:#ffcc00;border-color: black;color: black
+}
+
+.btn.btn-primary-2{
+    margin-right: 20px;
+    border-radius:8px;
+    background-color: darkblue;
+    border:1px solid transparent;
+    color:#fff;
+    align-items:center;
+    cursor:pointer;
+    padding:5px 10px;
+    display:inline-flex;
+    outline:0;
+    font-size:.9rem;
+    transition:all .3s ease-in-out;
+    box-shadow:0 0 15px 0 rgba(0,0,0,.1);
+}
+
+.btn:hover{background-color:#ffcc00;border-color: black;color: black
+}
+
+.dashboard {
+            width: 80%; /* Możesz dostosować szerokość tabeli */
+            margin: 0 auto; /* Wyśrodkowanie tabeli */
+            border: 1px solid black; /* Pojedyncze obramowanie */
+            border-collapse: collapse; /* Opcjonalnie, aby obramowanie było bardziej jednolite */
+        }
+
+.exchange{
+    margin-left: 150px
+}
+
+.search{
+    margin-left: 150px
+}
+
+.pagination{
+    margin-left: 150px
+}
+
+a {
+    text-decoration: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

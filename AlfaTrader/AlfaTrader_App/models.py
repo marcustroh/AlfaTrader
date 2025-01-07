@@ -44,6 +44,36 @@ class Fees(models.Model):
     def __str__(self):
         return f"Fee for transaction {self.transaction_id.id} by user {self.user.username} (Fee: {self.fee})"
 
+class UserStocksBalance(models.Model):
+    ticker = models.CharField(max_length=50)
+    quantity = models.PositiveIntegerField()
+    avg_cost_price = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.ticker} - {self.quantity} for user {self.user.username}"
+
+class Portfolio(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Portfolio of {self.user.username} - {self.name}"
+
+# Do starego modelu
+class PortfolioStocks(models.Model):
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE)
+    stocks = models.ForeignKey(UserStocksBalance, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.stocks.ticker} in portfolio {self.portfolio.name}"
+
+
+
+
+
+
 
 
 

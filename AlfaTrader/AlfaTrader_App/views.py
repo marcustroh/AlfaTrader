@@ -1,17 +1,15 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views import View
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model, login, logout
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
-from django.http import JsonResponse
-from .models import Transactions, CashBalance, Fees, Stocks
-from .forms import TransactionForm
+from .models import CashBalance, Fees, Stocks, Transactions, UserStocksBalance, Portfolio, PortfolioStocks
+from .forms import PortfolioForm, PortfolioModifyForm
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import pandas as pd
-import json
 import logging
 import os
 from datetime import datetime, timedelta
@@ -22,7 +20,6 @@ import matplotlib.pyplot as plt
 import mpld3
 from django.urls import reverse
 from django.contrib import messages
-from django.db import transaction
 
 from .forms import UserLoginForm, RegistrationForm
 from django.contrib.auth.models import User
@@ -31,12 +28,11 @@ from django.contrib.auth.models import User
 
 class StartView(View):
     def get(self, request):
-        return render(request, 'start.html')
-
-class MainView(View):
-    def get(self, request):
-        timestamp = datetime.now().timestamp()
-        return render(request, 'main.html', {'timestamp': timestamp})
+        if request.user.is_authenticated:
+            cash_balance = CashBalance.objects.get(user=request.user)
+        else:
+            cash_balance = None
+        return render(request, 'start.html', {'cash_balance': cash_balance})
 
 class BaseView(View):
     def get(self, request):
@@ -56,273 +52,28 @@ class UserLoginView(View):
         }
         if form.is_valid():
             login(request, form.user)
-            return render(request, 'main.html', context)
+            return render(request, 'start.html', context)
         else:
             return render(request, 'login.html', context)
-
-# def register(request):
-#     if request.method =='POST':
-#         form = RegistrationForm(request.POST)
-#         if form.is_valid():
-#             user = form.save(commit=False)
-#             user.set_password(form.cleaned_data['password'])
-#             user.save()
-#             return redirect('login')
-#     else:
-#         form = RegistrationForm()
-#         return render(request, 'register.html', {'form': form})
 
 class UserRegisterView(CreateView):
     model = User
     form_class = RegistrationForm
     template_name = 'register.html'
-    success_url = reverse_lazy('main.html')
+    success_url = reverse_lazy('start.html')
 
     def form_valid(self, form):
         user = form.save()
         CashBalance.objects.create(user=user)
         login(self.request, user)
-        return redirect('/../dashboard/')
+        return redirect('/../')
 
 class LogoutUserView(View):
     def get(self, request, *args, **kwargs):
         logout(request)
         return redirect('/')
 
-class DashboardView(View):
-    def get(self, request):
-            timestamp = datetime.now().timestamp()
-            date = request.GET.get('date')
-            exchange_filter = request.GET.get('exchange')
-            page_number = request.GET.get('page', 1)
-            cash_balance = None
-            if request.user.is_authenticated:
-                cash_balance = CashBalance.objects.get(user=request.user)
-            if not date:
-                return render(request, 'dashboard.html', {'rows': [], 'cash_balance': cash_balance, 'timestamp': timestamp})
-
-            input_file = f'AlfaTrader_App/quotes/txt/{date}_d.txt'
-            output_file = f'AlfaTrader_App/quotes/csv/{date}_d.csv'
-            mapping_file = 'AlfaTrader_App/quotes/mapping/names_modified.csv'
-
-            if not os.path.exists(input_file):
-                return HttpResponse('txt file with latest quotes not found.', status=404)
-            elif not os.path.exists(output_file):
-                try:
-                    df = pd.read_csv(input_file, sep=',')
-                    df.to_csv(output_file, index=False)
-                    upgraded_file = pd.merge(pd.read_csv(output_file), pd.read_csv(mapping_file), on='<TICKER>', how='left')
-                    upgraded_file.to_csv(output_file, index=False)
-                except Exception as error:
-                    return HttpResponse(f'Error reading txt file: {error}', status=500)
-
-            try:
-                df = pd.read_csv(output_file)
-                selected_columns = df.iloc[:, [0,10,2,7,11]]
-
-                selected_columns.iloc[:, 3] = pd.to_numeric(selected_columns.iloc[:, 3], errors='coerce')
-                if exchange_filter:
-                    selected_columns = selected_columns[selected_columns['Exchange'] == exchange_filter]
-                selected_columns.rename(columns={'<CLOSE>': 'CLOSE', '<TICKER>': 'TICKER', '<DATE>': 'DATE'}, inplace=True)
-                paginator = Paginator(selected_columns, 20)
-                page = paginator.get_page(page_number)
-                rows = page.object_list.to_dict(orient='records')
-            except Exception as error:
-                return HttpResponse(f'Error reading csv file: {error}', status=500)
-
-            return render(request, 'dashboard.html', {
-                'rows': rows,
-                'page': page,
-                'paginator': paginator,
-                'cash_balance': cash_balance
-            })
-
-## Alternatywny Dashboard
-class DashboardView2(View):
-    def get(self, request):
-            timestamp = datetime.now().timestamp()
-            exchange_filter = request.GET.get('exchange')
-            page_number = request.GET.get('page', 1)
-            cash_balance = None
-            if request.user.is_authenticated:
-                cash_balance = CashBalance.objects.get(user=request.user)
-
-            today = datetime.today()
-            if today.weekday() == 0:
-                last_business_day = today - timedelta(days=3)
-            else:
-                last_business_day = today - timedelta(days=1)
-
-            last_business_day_str = last_business_day.strftime('%Y%m%d')
-            input_file = f'AlfaTrader_App/quotes/txt/{last_business_day_str}_d.txt'
-            output_file = f'AlfaTrader_App/quotes/csv/{last_business_day_str}_d.csv'
-            mapping_file = 'AlfaTrader_App/quotes/mapping/names_modified.csv'
-
-            load_file = request.GET.get('load_file') == 'true'
-
-            if not os.path.exists(input_file) and not load_file:
-                return render(request, 'dashboard2.html', {
-                    'cash_balance': cash_balance,
-                    'timestamp': timestamp,
-                    'error_message': f"Please save down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}."
-                })
-            elif load_file and not os.path.exists(input_file):
-                return render(request, 'dashboard2.html', {
-                    'cash_balance': cash_balance,
-                    'timestamp': timestamp,
-                    'error_message': f"You still have not pulled down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}, do it please."
-                })
-            elif not os.path.exists(output_file):
-                try:
-                    df = pd.read_csv(input_file, sep=',')
-                    mapping_df = pd.read_csv(mapping_file)
-                    merged_df = pd.merge(df, mapping_df, on='<TICKER>', how='left')
-                    valid_exchanges = ['GPW', 'NYSE', 'NASDAQ']
-                    filtered_df = merged_df[merged_df['Exchange'].isin(valid_exchanges)]
-                    filtered_df.to_csv(output_file, index=False)
-                    # df.to_csv(output_file, index=False)
-                    # upgraded_file = pd.merge(pd.read_csv(output_file), pd.read_csv(mapping_file), on='<TICKER>', how='left')
-                    # upgraded_file.to_csv(output_file, index=False)
-                except Exception as error:
-                    return HttpResponse(f'Error reading txt file: {error}', status=500)
-
-            try:
-                df = pd.read_csv(output_file)
-                selected_columns = df.iloc[:, [0,10,2,7,11]]
-
-                selected_columns.iloc[:, 3] = pd.to_numeric(selected_columns.iloc[:, 3], errors='coerce')
-                if exchange_filter:
-                    selected_columns = selected_columns[selected_columns['Exchange'] == exchange_filter]
-                selected_columns.rename(columns={'<CLOSE>': 'CLOSE', '<TICKER>': 'TICKER', '<DATE>': 'DATE'}, inplace=True)
-                paginator = Paginator(selected_columns, 20)
-                page = paginator.get_page(page_number)
-                rows = page.object_list.to_dict(orient='records')
-            except Exception as error:
-                return HttpResponse(f'Error reading csv file: {error}', status=500)
-
-            return render(request, 'dashboard2.html', {
-                'rows': rows,
-                'page': page,
-                'paginator': paginator,
-                'cash_balance': cash_balance
-            })
-
-
-# class DashboardView3(View):
-#     def get(self, request):
-#             timestamp = datetime.now().timestamp()
-#             exchange_filter = request.GET.get('exchange')
-#             page_number = request.GET.get('page', 1)
-#             cash_balance = None
-#             if request.user.is_authenticated:
-#                 cash_balance = CashBalance.objects.get(user=request.user)
-#
-#             today = datetime.today()
-#             if today.weekday() == 0:
-#                 last_business_day = today - timedelta(days=3)
-#             elif today.weekday() == 6:
-#                 last_business_day = today - timedelta(days=2)
-#             else:
-#                 last_business_day = today - timedelta(days=1)
-#
-#             last_business_day_str = last_business_day.strftime('%Y%m%d')
-#             input_file = f'AlfaTrader_App/quotes/txt/{last_business_day_str}_d.txt'
-#             output_file = f'AlfaTrader_App/quotes/csv/{last_business_day_str}_d.csv'
-#             mapping_file = 'AlfaTrader_App/quotes/mapping/names_modified.csv'
-#
-#             load_file = request.GET.get('load_file') == 'true'
-#
-#             if not os.path.exists(input_file) and not load_file:
-#                 return render(request, 'dashboard3.html', {
-#                     'cash_balance': cash_balance,
-#                     'timestamp': timestamp,
-#                     'error_message': f"Please save down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}."
-#                 })
-#             elif load_file and not os.path.exists(input_file):
-#                 return render(request, 'dashboard3.html', {
-#                     'cash_balance': cash_balance,
-#                     'timestamp': timestamp,
-#                     'error_message': f"You still have not pulled down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}, do it please."
-#                 })
-#             elif not os.path.exists(output_file):
-#                 try:
-#                     df = pd.read_csv(input_file, sep=',')
-#                     mapping_df = pd.read_csv(mapping_file)
-#                     merged_df = pd.merge(df, mapping_df, on='<TICKER>', how='left')
-#                     valid_exchanges = ['GPW', 'NYSE', 'NASDAQ']
-#                     print(f"Merged DataFrame before filtering: {merged_df}")
-#                     filtered_df = merged_df[merged_df['Exchange'].isin(valid_exchanges)]
-#                     print(f"Filtered DataFrame: {filtered_df}")
-#
-#                     stocks_to_save = []
-#                     for _, row in filtered_df.iterrows():
-#                         date_value = str(int(row['<DATE>']))
-#                         try:
-#                             date_parsed = datetime.strptime(date_value, '%Y%m%d').date()
-#                         except ValueError:
-#                             print(f"Skipping row with invalid date: {row['<DATE>']}")
-#                             continue
-#                         print(f"Preparing to save stock: {row['<TICKER>']}, {row['Name']}, {date_parsed}, {row['<CLOSE>']}")
-#
-#                         stock = Stocks(
-#                             ticker=row['<TICKER>'],
-#                             name=row['Name'],
-#                             date=date_parsed,
-#                             close=row['<CLOSE>'],
-#                             exchange=row['Exchange'],
-#                         )
-#
-#                         if not Stocks.objects.filter(ticker=stock.ticker, date=stock.date).exists():
-#                             stocks_to_save.append(stock)
-#                             print(f"Stock added to list: {stock.ticker} for date {stock.date}")
-#                         else:
-#                             print(f"Stcok already exist in database: {stock.ticker} for date {stock.date}")
-#
-#                     if stocks_to_save:
-#                         Stocks.objects.bulk_create(stocks_to_save)
-#                         print(f"Bulk saved {len(stocks_to_save)} stocks")
-#                     else:
-#                         print("No stocks to save")
-#
-#                     filtered_df.to_csv(output_file, index=False)
-#
-#                 except Exception as error:
-#                     return HttpResponse(f'Error reading txt file: {error}', status=500)
-#
-#             try:
-#                 stocks = Stocks.objects.filter(date=last_business_day).order_by('ticker')
-#                 if exchange_filter:
-#                     stocks = stocks.filter(exchange=exchange_filter)
-#                 if not stocks.exists():
-#                     previous_business_day = last_business_day
-#                     while not stocks.exists():
-#                         previous_business_day -= timedelta(days=1)
-#                         while previous_business_day.weekday() in [5, 6]:
-#                             previous_business_day -= timedelta(days=1)
-#
-#                         stocks = Stocks.objects.filter(date=previous_business_day).order_by('ticker')
-#                         if exchange_filter:
-#                             stocks = stocks.filter(exchange=exchange_filter)
-#
-#                     print(f"Using data from previous business day: {previous_business_day.strftime('%Y-%m-%d')}")
-#
-#                 paginator = Paginator(stocks, 20)
-#                 page = paginator.get_page(page_number)
-#
-#             except Exception as error:
-#                 return HttpResponse(f'Error fetching data from the database: {error}', status=500)
-#
-#             if not stocks.exists():
-#                 page = []
-#
-#             return render(request, 'dashboard3.html', {
-#                 'stocks': page.object_list if isinstance(page, Paginator) else page,
-#                 'page': page,
-#                 'paginator': paginator,
-#                 'cash_balance': cash_balance,
-#                 'timestamp': timestamp
-#             })
-
+@method_decorator(login_required, name='dispatch')
 class DashboardView3(View):
     def get(self, request):
             timestamp = datetime.now().timestamp()
@@ -446,80 +197,14 @@ class DashboardView3(View):
 
 logger = logging.getLogger(__name__)
 
-# @method_decorator(login_required, name='dispatch')
-# class BuyTransactionView(View):
-#     def post(self, request):
-#         try:
-#             logger.debug(f"Request body: {request.body.decode('utf-8')}")
-#             if not request.body:
-#                 logger.error("Empty request body.")
-#                 return JsonResponse({'status': 'error', 'message': 'Empty request body.'}, status=400)
-#             try:
-#                 data = json.loads(request.body)
-#             except json.JSONDecodeError as e:
-#                 logger.error(f"JSON decode error: {e}")
-#                 return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
-#
-#             ticker = data.get('stock_id')
-#             quantity = data.get('quantity')
-#             value = data.get('value')
-#             close = data.get('close')
-#             fee = data.get('fees')
-#
-#             logger.debug(f"Recieved data: ticker={ticker}, quantity={quantity}, value={value}, close={close}, fee={fee}")
-#
-#             if not ticker or not quantity or not value or not close or fee is None:
-#                 logger.error("Missing data fields.")
-#                 return JsonResponse({'status': "error", 'message': 'Missing data fields'}, status=400)
-#
-#
-#             try:
-#                 quantity = int(quantity)
-#                 value = Decimal(value)
-#                 close = Decimal(close)
-#                 fee = Decimal(fee)
-#             except ValueError as e:
-#                 logger.error(f"Invalid value for quantity, value or close: {e}")
-#                 return JsonResponse({'status': "error", 'message': 'Invalid value for quantity, value or close'}, status=400)
-#
-#             transaction = Transactions.objects.create(
-#                 ticker=ticker,
-#                 quantity=quantity,
-#                 transaction_type='BUY',
-#                 value=value,
-#                 close_price=close,
-#                 user=request.user
-#             )
-#
-#             logger.debug(f"Transaction created: {transaction}")
-#
-#             Fees.objects.create(
-#                 transaction_id=transaction,
-#                 user=request.user,
-#                 fee=fee
-#             )
-#
-#             logger.debug(f"Fee entry created: {fee}")
-#
-#             cash_balance = CashBalance.objects.get(user=request.user)
-#             cash_balance.balance -= value + fee
-#             cash_balance.save()
-#             logger.debug(f"Cash balance updated: {cash_balance.balance}")
-#
-#             logger.debug(f"Transaction created successfully: {transaction}")
-#
-#             return JsonResponse({'status': 'success', 'transaction_id': transaction.id})
-#
-#         except Exception as e:
-#             logger.error(f"Error in BuyTransactionView: {e}")
-#             return JsonResponse({'status': 'error', 'message': 'an error occurred while processing the transaction.'}, status=500)
 
 @method_decorator(login_required, name='dispatch')
 class BuyTransactionView(View):
     def post(self, request):
         try:
             close_price = request.POST['close_price_buy']
-            quantity_buy = request.POST['quantity_buy']
+            cost_price = request.POST['cost_price']
+            quantity_buy = Decimal(request.POST['quantity_buy'])
             value = Decimal(request.POST['value_buy'])
             fee = Decimal(request.POST['fee_buy'])
             user = request.user
@@ -560,6 +245,18 @@ class BuyTransactionView(View):
             cash_balance.balance -= value + fee
             cash_balance.save()
 
+            user_stock_balance, created = UserStocksBalance.objects.get_or_create(
+                user=user,
+                ticker=ticker,
+                defaults={'quantity': 0, 'avg_cost_price': close_price}
+            )
+
+            if not created:
+                user_stock_balance.avg_cost_price = cost_price
+
+            user_stock_balance.quantity += quantity_buy
+            user_stock_balance.save()
+
             messages.success(request, 'Transaction created successfully!')
 
         except Exception as error:
@@ -579,6 +276,7 @@ class TransactionsView(View):
         fees = Fees.objects.filter(user=request.user).select_related('transaction_id')
         return render(request, 'transactions.html', {'transactions': transactions, 'fees': fees, 'cash_balance': cash_balance})
 
+@method_decorator(login_required, name='dispatch')
 class TickerDetailsView(View):
     def get(self, request, ticker):
         timestamp = datetime.now().timestamp()
@@ -695,8 +393,9 @@ class TickerDetailsView(View):
 class SellTransactionView(View):
     def post(self, request):
         try:
-            quantity_sell = request.POST['quantity_sell']
+            quantity_sell = Decimal(request.POST['quantity_sell'])
             close_price = request.POST['close_price_sell']
+            cost_price = request.POST['cost_price']
             ticker = request.POST['ticker']
             value = Decimal(request.POST['value_sell'])
             user = request.user
@@ -726,6 +425,15 @@ class SellTransactionView(View):
             cash_balance.balance += value - fee
             cash_balance.save()
 
+            user_stock_balance, created = UserStocksBalance.objects.get_or_create(
+                user=user,
+                ticker=ticker,
+            )
+
+            user_stock_balance.avg_cost_price = close_price
+            user_stock_balance.quantity -= quantity_sell
+            user_stock_balance.save()
+
             messages.success(request, 'Transaction created successfully!')
 
         except Exception as error:
@@ -736,19 +444,189 @@ class SellTransactionView(View):
 
 class AboutAuthor(View):
     def get(self, request):
-        return render(request, 'author.html')
+        if request.user.is_authenticated:
+            cash_balance = CashBalance.objects.get(user=request.user)
+        else:
+            cash_balance = None
+        return render(request, 'author.html', {'cash_balance': cash_balance})
 
 class ContactDetails(View):
     def get(self, request):
-        return render(request, 'contact_details.html')
+        if request.user.is_authenticated:
+            cash_balance = CashBalance.objects.get(user=request.user)
+        else:
+            cash_balance = None
+        return render(request, 'contact_details.html', {'cash_balance': cash_balance})
 
 class AboutApp(View):
     def get(self, request):
-        return render(request, 'about_app.html')
+        if request.user.is_authenticated:
+            cash_balance = CashBalance.objects.get(user=request.user)
+        else:
+            cash_balance = None
+        return render(request, 'about_app.html', {'cash_balance': cash_balance})
 
 class HowToBegin(View):
     def get(self, request):
-        return render(request, 'how_to_begin.html')
+        if request.user.is_authenticated:
+            cash_balance = CashBalance.objects.get(user=request.user)
+        else:
+            cash_balance = None
+        return render(request, 'how_to_begin.html', {'cash_balance': cash_balance})
+
+
+@method_decorator(login_required, name='dispatch')
+class PortfoliosView(View):
+    def get(self, request):
+        portfolios = Portfolio.objects.filter(user=request.user)
+        cash_balance = CashBalance.objects.get(user=request.user)
+
+        portfolios_data = []
+        for portfolio in portfolios:
+            portfolio_stocks = PortfolioStocks.objects.filter(portfolio=portfolio)
+            stocks_with_quantities = []
+            for portfolio_stock in portfolio_stocks:
+                stock = portfolio_stock.stocks
+                ticker = stock.ticker
+
+                last_stock = Stocks.objects.filter(ticker=ticker).order_by('-date').first()
+                last_close_price = last_stock.close if last_stock else None
+
+                # user_cost_price = UserStocksBalance.objects.filter(user=request.user, ticker=ticker).first()
+                # cost_price = user_cost_price.avg_cost_price if user_cost_price else None
+
+                transactions = Transactions.objects.filter(ticker=ticker, user=request.user)
+                buy_transactions = transactions.filter(transaction_type='BUY').order_by('date')
+                sell_transactions = transactions.filter(transaction_type='SELL')
+                remaining_shares = 0
+                weighted_sum = 0
+                if buy_transactions.exists():
+                    for buy in buy_transactions:
+                        remaining_shares += buy.quantity
+                        weighted_sum += buy.quantity * buy.close_price
+
+                    sell_transactions = transactions.filter(transaction_type='SELL')
+
+                    if sell_transactions.exists():
+                        for sell in sell_transactions:
+                            sell_quantity = sell.quantity
+                            for buy in buy_transactions:
+                                if sell_quantity <= 0:
+                                    break
+                                if buy.quantity > 0:
+                                    if buy.quantity <= sell_quantity:
+                                        sell_quantity -= buy.quantity
+                                        weighted_sum -= buy.quantity * buy.close_price
+                                        remaining_shares -= buy.quantity
+                                        buy.quantity = 0
+                                    else:
+                                        buy.quantity -= sell_quantity
+                                        weighted_sum -= sell_quantity * buy.close_price
+                                        remaining_shares -= sell_quantity
+                                        sell_quantity = 0
+
+                    if remaining_shares > 0:
+                        cost_price = weighted_sum / remaining_shares
+                        cost_price = round(cost_price, 2)
+                    else:
+                        cost_price = 0
+                else:
+                    cost_price = 0
+
+                profit_loss = None
+                if last_close_price is not None and cost_price is not None:
+                    profit_loss = stock.quantity * (last_close_price - cost_price)
+
+                stocks_with_quantities.append({
+                    'ticker': stock.ticker,
+                    'quantity': stock.quantity,
+                    'close_price': last_close_price,
+                    'cost_price': cost_price,
+                    'profit_loss': profit_loss
+                })
+            portfolios_data.append({
+                'portfolio': portfolio,
+                'stocks': stocks_with_quantities
+            })
+
+        return render(request, 'portfolios.html', {
+            'portfolios_data': portfolios_data,
+            'cash_balance': cash_balance,
+        })
+
+@method_decorator(login_required, name='dispatch')
+class PortfolioCreateView(View):
+    def get(self, request):
+        form = PortfolioForm(user=request.user)
+        cash_balance = CashBalance.objects.get(user=request.user)
+        return render(request, 'portfolio_create.html', {'form': form, 'cash_balance': cash_balance})
+    def post(self, request):
+        form = PortfolioForm(request.POST)
+
+        if form.is_valid():
+            portfolio_name = form.cleaned_data['portfolio_name']
+            selected_stocks = form.cleaned_data['stock']
+
+            portfolio = Portfolio.objects.create(
+                user=request.user,
+                name=portfolio_name,
+            )
+
+            for stock in selected_stocks:
+                PortfolioStocks.objects.create(
+                    portfolio=portfolio,
+                    stocks=stock
+                )
+
+            return render(request, 'portfolios.html')
+
+        return render(request, 'portfolios.html')
+
+@method_decorator(login_required, name='dispatch')
+class PortfolioModifyView(UpdateView):
+    model = Portfolio
+    form_class = PortfolioModifyForm
+    template_name = 'portfolio_create.html'
+
+    def get_success_url(self):
+        return reverse_lazy('portfolios')
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Portfolio, id=self.kwargs['portfolio_id'], user=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        portfolio = form.save(commit=False)
+        portfolio.save()
+
+        PortfolioStocks.objects.filter(portfolio=portfolio).delete()
+
+        selected_stocks = form.cleaned_data['stocks']
+        for stock in selected_stocks:
+            PortfolioStocks.objects.create(portfolio=portfolio, stocks=stock)
+
+        return super().form_valid(form)
+
+@method_decorator(login_required, name='dispatch')
+class PortfolioDeleteView(DeleteView):
+    model = Portfolio
+    template_name = 'portfolio_delete_confirm.html'
+    context_object_name = 'portfolio'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Portfolio, id=self.kwargs['portfolio_id'], user=self.request.user)
+
+    def get_success_url(self):
+        return reverse_lazy('portfolios')
+
+
+
+
+
 
 
 

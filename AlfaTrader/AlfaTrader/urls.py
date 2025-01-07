@@ -23,14 +23,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('base/', at_views.BaseView.as_view(), name='base'),
     path('', at_views.StartView.as_view(), name='start'),
-    path('main/', at_views.MainView.as_view(), name='main'),
+    # path('main/', at_views.MainView.as_view(), name='main'),
     path('login/', at_views.UserLoginView.as_view(), name='login'),
-    # path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
-    # path('register/', at_views.register, name='register'),
     path('register/', at_views.UserRegisterView.as_view(), name='register'),
     path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
-    path('dashboard/', at_views.DashboardView.as_view(), name='dashboard'),
-    path('dashboard2/', at_views.DashboardView2.as_view(), name='dashboard2'),
     path('dashboard3/', at_views.DashboardView3.as_view(), name='dashboard3'),
     path('dashboard/<str:ticker>', at_views.TickerDetailsView.as_view(), name='ticker_detail'),
     path('buy_transaction/', at_views.BuyTransactionView.as_view(), name='buy_transaction'),
@@ -40,7 +36,11 @@ urlpatterns = [
     path('contact/', at_views.ContactDetails.as_view(), name='contact_details'),
     path('about_app/', at_views.AboutApp.as_view(), name='about_app'),
     path('how_to_begin/', at_views.HowToBegin.as_view(), name='how_to_begin'),
-    # path('transaction_results/', at_views.TransactionResultsView.as_view(), name='transaction_results'),
+    path('portfolios/', at_views.PortfoliosView.as_view(), name='portfolios'),
+    path('portfolios/create/', at_views.PortfolioCreateView.as_view(), name='portfolio_create'),
+    path('portfolios/modify/<int:portfolio_id>/', at_views.PortfolioModifyView.as_view(), name='portfolio_modify'),
+    path('portfolios/delete/<int:portfolio_id>/', at_views.PortfolioDeleteView.as_view(), name='portfolio_delete'),
+
 ]
 
 

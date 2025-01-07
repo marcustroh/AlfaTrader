@@ -1,0 +1,29 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn primary">Create Portfolio</button>
+    </form>
+    
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

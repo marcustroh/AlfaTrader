@@ -1,0 +1,30 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+    
+    <h2>Are you sure you want to delete the portfolio: '{{ portfolio.name }}?</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="delete-btn">Yes, delete</button>
+    </form>
+        <a href="{% url 'portfolios' %}"><button class="btn btn-primary">Cancel</button></a>
+    
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

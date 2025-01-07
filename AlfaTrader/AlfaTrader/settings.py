@@ -123,3 +123,18 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Loging required mixin
+LOGIN_URL = '/login/'
+
+
+
+
+
+
+
+
+
+
+
+
+

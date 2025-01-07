@@ -3,24 +3,6 @@
 {% load static %}
 
 {% block content %}
-    {% load static %}
-        <header>
-          <div class="container" id="{{ timestamp }}">
-          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
-            <p>{{ cash_balance }}</p>
-              <p>Hello {{ request.user }}!</p>
-          </div>
-        </header>
-       <div class="topnav">
-           <div class="left-links">
-                <a href="/../dashboard3">Transaction Dashboard</a>
-                <a href="/../transactions">Transaction History</a>
-                <a href="#">Portfolios</a>
-           </div>
-           <div class="right-links">
-               <a href="/../logout/">Logout</a>
-           </div>
-       </div>
     
     <div class="dashboard-content">
         {% if error_message %}
@@ -49,9 +31,6 @@
                 <button type="submit" class="btn btn-primary-2">Search</button>
             </form>
             <br>
-            
-{#        <label for="search">Search by company name:</label>#}
-{#        <input type="text" id="search" onkeyup="searchTable()" placeholder="Search for company names..">#}
     
         <table class="dashboard" border = '1'>
             <thead>
@@ -61,11 +40,6 @@
                         <th>Date</th>
                         <th>Close</th>
                         <th>Exchange</th>
-{#                        <th>Quantity</th>#}
-{#                        <th>Value</th>#}
-{#                        <th>Fees</th>#}
-{#                        <th>Total Cost</th>#}
-{#                        <th>Action</th>#}
                     </tr>
             </thead>
             <tbody>
@@ -76,11 +50,6 @@
                         <td>{{ stock.date }}</td>
                         <td>{{ stock.close }}</td>
                         <td>{{ stock.exchange }}</td>
-{#                        <td><input type="number" class="quantity" data-close="{{ stock.close }}" min="1" step="1"></td>#}
-{#                        <td><input type="text" class="value" value="0" readonly></td>#}
-{#                        <td><input type="text" class="fees" value="0" readonly></td>#}
-{#                        <td><input type="text" class="total" value="0" readonly></td>#}
-{#                        <td><button class="buy-btn" data-id="{{ stock.ticker }}">Buy</button></td>#}
                     </tr>
                 {% endfor %}
             </tbody>
@@ -101,8 +70,6 @@
         </div>
     {% endif %}
     </div>
-    
-    <script src="{% static 'js/search.js' %}?v={{ timestamp }}"></script>
     
 
 {% endblock %}

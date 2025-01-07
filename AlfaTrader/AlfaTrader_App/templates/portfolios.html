@@ -1,0 +1,64 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container-portfolio-btn">
+        <a href="{% url 'portfolio_create' %}"><button class="btn btn-primary">Create Portfolio</button></a>
+{#        <a href="{% url 'portfolio_modify' %}"><button class="btn btn-primary">Modify Portfolio</button></a>#}
+{#        <button class="btn btn-primary">Delete Portfolio</button>#}
+    
+    </div>
+    <div>
+        <h2>Portfolios:</h2>
+        {% for portfolio_data in portfolios_data %}
+            <div class="portfolio-table">
+                <h3>{{ portfolio_data.portfolio.name }}</h3>
+                <a href="{% url 'portfolio_modify' portfolio_data.portfolio.id %}"><button class="modify-btn">Modify Portfolio</button></a>
+                <a href="{% url 'portfolio_delete' portfolio_data.portfolio.id %}"><button class="delete-btn">Delete Portfolio</button></a>
+                    {% if portfolio_data.stocks %}
+                <table class="dashboard" border = '1'>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Quantity</th>
+                            <th>Weighted avg stock price</th>
+                            <th>Current market price</th>
+                            <th>Profit/Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in portfolio_data.stocks %}
+                        <tr>
+                            <td><a href="/../dashboard/{{ stock.ticker }}">{{ stock.ticker }}</a></td>
+                            <td>{{ stock.quantity }}</td>
+                            <td>{{ stock.cost_price }}</td>
+                            <td>{{ stock.close_price }}</td>
+                            <td>{{ stock.profit_loss }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No stocks in this portfolio.</p>
+            {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
