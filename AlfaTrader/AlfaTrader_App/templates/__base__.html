@@ -1,0 +1,92 @@
+<!doctype html>
+    <html>
+        <head><meta charset="utf-8">
+            <link rel="stylesheet" href="/../static/css/style.css">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        </head>
+        {% load static %}
+        {% if user.is_authenticated %}
+        <header>
+          <div class="container" id="{{ timestamp }}">
+              <div class="left-links">
+          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
+              </div>
+              <div class="right-links">
+              <p>{{ cash_balance }} USD</p>
+              <p>Hello {{ request.user }}!</p>
+              </div>
+          </div>
+        </header>
+       <div class="topnav">
+           <div class="left-links">
+                <a href="/../dashboard3">Transaction Dashboard</a>
+                <a href="/../transactions">Transaction History</a>
+                <a href="/../portfolios">Portfolios</a>
+           </div>
+           <div class="right-links">
+                <a href="/../logout/">Logout</a>
+            </div>
+              </div>
+       {% else %}
+        <header>
+          <div class="container" id="{{ timestamp }}">
+          <div class="logo"><a href="{% url 'start' %}"><img src="{% static 'AlfaTrader_App/intro_alfa.jpg' %}"></a> Alfa Trader</div>
+          </div>
+        </header>
+       <div class="topnav">
+           <div class="left-links">
+                <a href="/../dashboard3">Transaction Dashboard</a>
+                <a href="/../transactions">Transaction History</a>
+                <a href="/../portfolios">Portfolios</a>
+           </div>
+           <div class="right-links">
+               <a href="/../register/">Sign Up</a>
+               <a href="/../login/">Sign In</a>
+               {% endif %}
+           </div>
+              </div>
+        <body>
+        {% block content %}
+        {% endblock content %}
+        <footer>
+            <section class="footer" id="contact">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <h3>Market News</h3>
+                            <h6><a href="https://stooq.pl/">Stooq</a></h6>
+                            <h6><a href="https://finance.yahoo.com/">Yahoo Finance</a></h6>
+                            <h6><a href="https://www.bloomberg.com/markets">Bloomberg</a></h6>
+                        </div>
+                        <div class="col">
+                            <h3>Alfa Trader</h3>
+                            <h6><a href="{% url 'about_app' %}">About the App</a></h6>
+                            <h6><a href="{% url 'how_to_begin' %}">How to begin</a></h6>
+                        </div>
+                        <div class="col">
+                            <h3>All about investing</h3>
+                            <h6><a href="https://www.investopedia.com/terms/s/stock.asp">What are the stocks</a></h6>
+                            <h6><a href="https://www.investopedia.com/ask/answers/05/stockgainsandlosses.asp">How to trade</a></h6>
+                        </div>
+                        <div class="col">
+                            <h3>Contact</h3>
+                            <h6><a href="{% url 'about_author' %}">About the author</a></h6>
+                            <h6><a href="{% url 'contact_details' %}">Contact details</a></h6>
+                        </div>
+                        <div class="col">
+                            <h3>Social media</h3>
+                            <a href ="https://www.facebook.com/marcus.troh" target="_blank" class="social-link">
+                                <i class="fab fa-facebook-f"> Marcin Trochimiuk on Facebook</i>
+                            </a>
+                            <a href="https://www.instagram.com/marcus.troh" target="blank" class="social-link">
+                                <i class="fab fa-instagram"> Marcin Trochimiuk on Instagram</i>
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+            </section>        
+        </footer>
+        </body>
+    </html>

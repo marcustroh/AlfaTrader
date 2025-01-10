@@ -16,7 +16,49 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from AlfaTrader_App import views as at_views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('base/', at_views.BaseView.as_view(), name='base'),
+    path('', at_views.StartView.as_view(), name='start'),
+    path('login/', at_views.UserLoginView.as_view(), name='login'),
+    path('register/', at_views.UserRegisterView.as_view(), name='register'),
+    path('logout/', at_views.LogoutUserView.as_view(), name='logout'),
+    path('dashboard3/', at_views.DashboardView3.as_view(), name='dashboard3'),
+    path('dashboard/<str:ticker>', at_views.TickerDetailsView.as_view(), name='ticker_detail'),
+    path('buy_transaction/', at_views.BuyTransactionView.as_view(), name='buy_transaction'),
+    path('sell_transaction/', at_views.SellTransactionView.as_view(), name='sell_transaction'),
+    path('transactions/', at_views.TransactionsView.as_view(), name='transactions'),
+    path('about_author/', at_views.AboutAuthor.as_view(), name='about_author'),
+    path('contact/', at_views.ContactDetails.as_view(), name='contact_details'),
+    path('about_app/', at_views.AboutApp.as_view(), name='about_app'),
+    path('how_to_begin/', at_views.HowToBegin.as_view(), name='how_to_begin'),
+    path('portfolios/', at_views.PortfoliosView.as_view(), name='portfolios'),
+    path('portfolios/create/', at_views.PortfolioCreateView.as_view(), name='portfolio_create'),
+    path('portfolios/modify/<int:portfolio_id>/', at_views.PortfolioModifyView.as_view(), name='portfolio_modify'),
+    path('portfolios/delete/<int:portfolio_id>/', at_views.PortfolioDeleteView.as_view(), name='portfolio_delete'),
+
 ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

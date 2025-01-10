@@ -1,0 +1,12 @@
+#baza SQLite
+db.sqlite3
+
+#ignorowania plikow z notowaniami i zmodyfikowanymi csv
+quotes/csv
+quotes/txt
+
+#ignorowanie plikow pythona
+*.pyc
+*.pyo
+*.pyd
+__pycache__/

@@ -1,0 +1,161 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+        
+    <h3>Price Change for {{ ticker }}:</h3>
+    <div class="container-2">
+        <div>
+            {{ graph_html|safe }}
+        </div>
+    </div>
+    <h2>Details for {{ ticker }}</h2>
+    <div class="container-3">
+        <div>
+            <h3>Buy Shares</h3>
+            <form id="buy-form" method="POST" action="{% url 'buy_transaction' %}">
+            {% csrf_token %}
+            <table>
+                <input type="hidden" name="ticker" value="{{ ticker }}">
+                <tr>
+                    <td>Close Price:</td>
+                    <td><input type="text" class="close_price_buy" name="close_price_buy" value="{{ close_price }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Weighted avg cost price</td>
+                    <td><input type="text" class="cost_price" name="cost_price" data-cost-price="{{ weighted_avg_cost_price }}" value="{{ weighted_avg_cost_price }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Quantity:</td>
+                    <td><input type="number" class="quantity_buy" name="quantity_buy" id="quantity_buy" data-close="{{ close_price }}" min="1" step="1" required></td>
+                </tr>
+                <tr>
+                    <td>Value:</td>
+                    <td><input type="text" class="value_buy" name="value_buy" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td>Fee:</td>
+                    <td><input type="text" class="fee_buy" name="fee_buy" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td>Total:</td>
+                    <td><input type="text" class="total_buy" name="total_buy" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button type="submit" class="btn buy" data-id="{{ ticker }}">BUY</button>
+                    </td>
+                </tr>
+            </table>
+            </form>
+        </div>
+        <div>
+            <h3>Sell Shares</h3>
+            <form id="sell-form" method="POST" action="{% url 'sell_transaction' %}">
+            {% csrf_token %}
+            <table class="sell-table">
+                <input type="hidden" name="ticker" value="{{ ticker }}">
+                <tr>
+                    <td>Close price:</td>
+                    <td><input type="text" class="close_price_sell" name="close_price_sell" value="{{ close_price }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Weighted avg cost price</td>
+                    <td><input type="text" class="cost_price" name="cost_price" data-cost-price="{{ weighted_avg_cost_price }}" value="{{ weighted_avg_cost_price }}" readonly></td>
+                </tr>
+                <tr>
+                    <td>Shares availible</td>
+                    <td><input type="text" name="remaining_shares" value="{{ remaining_shares }}" readonly</td>
+                </tr>
+                <tr>
+                    <td>Quantity:</td>
+                    <td><input type="number" class="quantity_sell" name="quantity_sell" min="1" step="1" required></td>
+                </tr>
+                <tr>
+                    <td>Value:</td>
+                    <td><input type="text" class="value_sell" name="value_sell" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td>Fee:</td>
+                    <td><input type="text" class="fees_sell" name="fees_sell" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td>Total:</td>
+                    <td><input type="text" class="total_sell" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td>Profit/Loss:</td>
+                    <td><input type="text" class="profit-loss" value="0" readonly></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button type="submit" class="btn sell" data-id="{{ ticker }}">SELL</button>
+                    </td>
+                </tr>
+            </table>
+            </form>
+        </div>
+    </div>
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <h2>Transactions</h2>
+    <div class="container-2">
+            
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Ticker</th>
+                        <th>Quantity</th>
+                        <th>Transaction Type</th>
+                        <th>Value</th>
+                        <th>Close Price</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.id }}</td>
+                        <td>{{ transaction.ticker }}</td>
+                        <td>{{ transaction.quantity }}</td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td>{{ transaction.value }}</td>
+                        <td>{{ transaction.close_price }}</td>
+                        <td>{{ transaction.date }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">No transactions found.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+        </table>
+    </div>
+    </div>
+    <script src="{% static 'js/buy_calculation.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'js/sell_calculation.js' %}?v={{ timestamp }}"></script>
+    
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

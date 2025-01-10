@@ -1,0 +1,90 @@
+{% extends '__base__.html' %}
+
+{% load static %}
+
+{% block content %}
+    
+    <div class="dashboard-content">
+        {% if error_message %}
+            <div class="alert alert-warning">
+                <p>{{ error_message }}</p>
+                <form method="get" action="{% url 'dashboard3' %}">
+                    <button type="submit" class="btn btn-primary" name="load_file" value="true">OK, I have saved down the file</button>
+                </form>
+            </div>
+        {% else %}
+            <form method="get" action="{% url 'dashboard3' %}">
+                {% csrf_token %}
+            <label for="exchange" class="exchange">Select stocks exchange:</label>
+            <select id="exchange" name="exchange">
+                <option value="">--Select exchange--</option>
+                <option value="GPW">GPW</option>
+                <option value="NYSE">NYSE</option>
+                <option value="NASDAQ">NASDAQ</option>
+            </select>
+            <button type="submit" class="btn btn-primary-2">Pull quotes</button>
+            </form>
+                <p></p>
+            <form method="get" action="{% url 'dashboard3' %}">
+            <label for="search" class="search">Search by company name:</label>
+                <input type="text" name="search" placeholder="Search by company name" value="{{ request.GET.search }}">
+                <button type="submit" class="btn btn-primary-2">Search</button>
+            </form>
+            <br>
+    
+        <table class="dashboard" border = '1'>
+            <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Name</th>
+                        <th>Date</th>
+                        <th>Close</th>
+                        <th>Exchange</th>
+                    </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                    <tr>
+                        <td><a href="{% url 'ticker_detail' stock.ticker %}">{{ stock.ticker }}</a></td>
+                        <td>{{ stock.name }}</td>
+                        <td>{{ stock.date }}</td>
+                        <td>{{ stock.close }}</td>
+                        <td>{{ stock.exchange }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+        <div class="pagination">
+            {% if page.has_previous %}
+                <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page=1">&laquo; First</a>
+                <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&{{ page.previous_page_number }}">Previous</a>
+            {% endif %}
+        
+            <span>Page {{ page.number }} out of {{ page.paginator.num_pages }}</span>
+        
+            {% if page.has_next %}
+                <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page={{ page.next_page_number }}">Next</a>
+                <a href="?date={{ request.GET.date }}&exchange={{ request.GET.exchange }}&page={{ page.paginator.num_pages }}">Last one &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+    </div>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
