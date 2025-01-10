@@ -32,7 +32,7 @@ class StartView(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'start.html', {'cash_balance': cash_balance})
+        return render(request, 'start.html', {'cash_balance': cash_balance.balance if cash_balance else None})
 
 class BaseView(View):
     def get(self, request):
@@ -66,7 +66,7 @@ class UserRegisterView(CreateView):
         user = form.save()
         CashBalance.objects.create(user=user)
         login(self.request, user)
-        return redirect('/../')
+        return redirect('start')
 
 class LogoutUserView(View):
     def get(self, request, *args, **kwargs):
@@ -80,10 +80,11 @@ class DashboardView3(View):
             exchange_filter = request.GET.get('exchange')
             search_query = request.GET.get('search', '').strip()
             page_number = request.GET.get('page', 1)
-            cash_balance = None
 
             if request.user.is_authenticated:
                 cash_balance = CashBalance.objects.get(user=request.user)
+            else:
+                cash_balance = None
 
             today = datetime.today()
             if today.weekday() == 0:
@@ -102,13 +103,13 @@ class DashboardView3(View):
 
             if not os.path.exists(input_file) and not load_file:
                 return render(request, 'dashboard3.html', {
-                    'cash_balance': cash_balance,
+                    'cash_balance': cash_balance.balance,
                     'timestamp': timestamp,
                     'error_message': f"Please save down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}."
                 })
             elif load_file and not os.path.exists(input_file):
                 return render(request, 'dashboard3.html', {
-                    'cash_balance': cash_balance,
+                    'cash_balance': cash_balance.balance,
                     'timestamp': timestamp,
                     'error_message': f"You still have not pulled down the txt quotes file from https://stooq.pl/db/ for the date {last_business_day_str}, do it please."
                 })
@@ -191,11 +192,9 @@ class DashboardView3(View):
                 'stocks': page.object_list if isinstance(page, Paginator) else page,
                 'page': page,
                 'paginator': paginator,
-                'cash_balance': cash_balance,
+                'cash_balance': cash_balance.balance,
                 'timestamp': timestamp
             })
-
-logger = logging.getLogger(__name__)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -232,8 +231,6 @@ class BuyTransactionView(View):
                 close_price=close_price,
                 user=user
             )
-
-            logger.debug(f"Transaction created: {transaction}")
 
             Fees.objects.create(
                 transaction_id=transaction,
@@ -274,7 +271,7 @@ class TransactionsView(View):
         cash_balance = CashBalance.objects.get(user=request.user)
         transactions = Transactions.objects.filter(user=request.user)
         fees = Fees.objects.filter(user=request.user).select_related('transaction_id')
-        return render(request, 'transactions.html', {'transactions': transactions, 'fees': fees, 'cash_balance': cash_balance})
+        return render(request, 'transactions.html', {'transactions': transactions, 'fees': fees, 'cash_balance': cash_balance.balance})
 
 @method_decorator(login_required, name='dispatch')
 class TickerDetailsView(View):
@@ -378,7 +375,7 @@ class TickerDetailsView(View):
 
         return render(request, 'ticker_details.html', {
             'transactions': transactions,
-            'cash_balance': cash_balance,
+            'cash_balance': cash_balance.balance,
             'ticker': ticker,
             'close_price': close_price,
             'weighted_avg_cost_price': weighted_avg_cost_price,
@@ -448,7 +445,7 @@ class AboutAuthor(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'author.html', {'cash_balance': cash_balance})
+        return render(request, 'author.html', {'cash_balance': cash_balance.balance})
 
 class ContactDetails(View):
     def get(self, request):
@@ -456,7 +453,7 @@ class ContactDetails(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'contact_details.html', {'cash_balance': cash_balance})
+        return render(request, 'contact_details.html', {'cash_balance': cash_balance.balance})
 
 class AboutApp(View):
     def get(self, request):
@@ -464,7 +461,7 @@ class AboutApp(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'about_app.html', {'cash_balance': cash_balance})
+        return render(request, 'about_app.html', {'cash_balance': cash_balance.balance})
 
 class HowToBegin(View):
     def get(self, request):
@@ -472,7 +469,7 @@ class HowToBegin(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'how_to_begin.html', {'cash_balance': cash_balance})
+        return render(request, 'how_to_begin.html', {'cash_balance': cash_balance.balance})
 
 
 @method_decorator(login_required, name='dispatch')
@@ -491,9 +488,6 @@ class PortfoliosView(View):
 
                 last_stock = Stocks.objects.filter(ticker=ticker).order_by('-date').first()
                 last_close_price = last_stock.close if last_stock else None
-
-                # user_cost_price = UserStocksBalance.objects.filter(user=request.user, ticker=ticker).first()
-                # cost_price = user_cost_price.avg_cost_price if user_cost_price else None
 
                 transactions = Transactions.objects.filter(ticker=ticker, user=request.user)
                 buy_transactions = transactions.filter(transaction_type='BUY').order_by('date')
@@ -551,7 +545,7 @@ class PortfoliosView(View):
 
         return render(request, 'portfolios.html', {
             'portfolios_data': portfolios_data,
-            'cash_balance': cash_balance,
+            'cash_balance': cash_balance.balance,
         })
 
 @method_decorator(login_required, name='dispatch')
@@ -559,13 +553,16 @@ class PortfolioCreateView(View):
     def get(self, request):
         form = PortfolioForm(user=request.user)
         cash_balance = CashBalance.objects.get(user=request.user)
-        return render(request, 'portfolio_create.html', {'form': form, 'cash_balance': cash_balance})
+        return render(request, 'portfolio_create.html', {'form': form, 'cash_balance': cash_balance.balance})
     def post(self, request):
         form = PortfolioForm(request.POST)
 
         if form.is_valid():
             portfolio_name = form.cleaned_data['portfolio_name']
             selected_stocks = form.cleaned_data['stock']
+
+            if not selected_stocks:
+                return render(request, 'portfolio_create.html', {'form': form})
 
             portfolio = Portfolio.objects.create(
                 user=request.user,
@@ -578,9 +575,11 @@ class PortfolioCreateView(View):
                     stocks=stock
                 )
 
+            messages.success(request, 'Portfolio successfully created!')
             return render(request, 'portfolios.html')
 
-        return render(request, 'portfolios.html')
+        messages.error(request, 'Please select stocks you want to to add.')
+        return render(request, 'portfolios.html', {'form': form})
 
 @method_decorator(login_required, name='dispatch')
 class PortfolioModifyView(UpdateView):
@@ -600,6 +599,11 @@ class PortfolioModifyView(UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        selected_stocks = form.cleaned_data.get('stocks')
+        if not selected_stocks:
+            messages.error(self.request, 'Please select stocks you want to add.')
+            return self.render_to_response(self.get_context_data(form=form))
+
         portfolio = form.save(commit=False)
         portfolio.save()
 
@@ -622,6 +626,8 @@ class PortfolioDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('portfolios')
+
+
 
 
 

@@ -5,10 +5,18 @@
 {% block content %}
     <div class="container-portfolio-btn">
         <a href="{% url 'portfolio_create' %}"><button class="btn btn-primary">Create Portfolio</button></a>
-{#        <a href="{% url 'portfolio_modify' %}"><button class="btn btn-primary">Modify Portfolio</button></a>#}
-{#        <button class="btn btn-primary">Delete Portfolio</button>#}
+
     
     </div>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <div>
         <h2>Portfolios:</h2>
         {% for portfolio_data in portfolios_data %}

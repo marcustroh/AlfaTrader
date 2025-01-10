@@ -37,7 +37,7 @@ class CashBalance(models.Model):
         return f"Cash balance: {self.balance}"
 
 class Fees(models.Model):
-    transaction_id = models.ForeignKey(Transactions, on_delete=models.CASCADE)
+    transaction_id = models.OneToOneField(Transactions, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     fee = models.DecimalField(max_digits=15, decimal_places=2)
 
