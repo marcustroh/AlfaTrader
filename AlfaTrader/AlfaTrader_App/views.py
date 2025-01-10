@@ -445,7 +445,7 @@ class AboutAuthor(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'author.html', {'cash_balance': cash_balance.balance})
+        return render(request, 'author.html', {'cash_balance': cash_balance.balance if cash_balance else None})
 
 class ContactDetails(View):
     def get(self, request):
@@ -453,7 +453,7 @@ class ContactDetails(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'contact_details.html', {'cash_balance': cash_balance.balance})
+        return render(request, 'contact_details.html', {'cash_balance': cash_balance.balance if cash_balance else None})
 
 class AboutApp(View):
     def get(self, request):
@@ -461,7 +461,7 @@ class AboutApp(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'about_app.html', {'cash_balance': cash_balance.balance})
+        return render(request, 'about_app.html', {'cash_balance': cash_balance.balance if cash_balance else None})
 
 class HowToBegin(View):
     def get(self, request):
@@ -469,7 +469,7 @@ class HowToBegin(View):
             cash_balance = CashBalance.objects.get(user=request.user)
         else:
             cash_balance = None
-        return render(request, 'how_to_begin.html', {'cash_balance': cash_balance.balance})
+        return render(request, 'how_to_begin.html', {'cash_balance': cash_balance.balance if cash_balance else None})
 
 
 @method_decorator(login_required, name='dispatch')
